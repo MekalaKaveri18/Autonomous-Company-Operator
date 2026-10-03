@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CentrAlign Operator — Autonomous Company Operator</title>
+<meta name="description" content="An autonomous AI operator that turns a one-line company request into completed, independently verified work across documents, a browser-driven ERP, internal APIs and a Windows desktop application.">
+<meta property="og:title" content="CentrAlign Operator">
+<meta property="og:description" content="Goal → Understand → Plan → Execute → Observe → Adapt → Verify. An AI employee prototype with independent verification and real computer use.">
+<meta property="og:type" content="website">
+<style>
+:root{
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:44px;--s12:64px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --bg:#0b0c0f;--panel:#13151a;--sunk:#101217;--line:#242831;--line-2:#1c2027;
+  --ink:#e9ebef;--ink-2:#a1a8b3;--ink-3:#6e757f;
+  --brand:#7b95ff;--brand-bg:#161f3d;
+  --ok:#46c98b;--ok-bg:#0f2a1f;
+  --warn:#e0a83c;--warn-bg:#2a2111;
+  --bad:#f1736c;--bad-bg:#2d1615;
+  --violet:#a98bf5;--violet-bg:#1f1934;
+  --r:10px;--r-lg:14px;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#fbfbfd;--panel:#fff;--sunk:#f4f5f7;--line:#e4e6ea;--line-2:#eef0f3;
+    --ink:#16181d;--ink-2:#565c66;--ink-3:#868c96;
+    --brand:#3558f2;--brand-bg:#eef2ff;
+    --ok:#0b875b;--ok-bg:#e6f6ef;
+    --warn:#9a6200;--warn-bg:#fdf3e0;
+    --bad:#c92a2a;--bad-bg:#fdeceb;
+    --violet:#6b3fd4;--violet-bg:#f1ecfe;
+  }
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;}
+a{color:var(--brand);}
+img{max-width:100%;display:block;}
+.wrap{max-width:1040px;margin:0 auto;padding:0 var(--s5);}
+.rule{border-top:1px solid var(--line);}
+
+/* header */
+header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+header .wrap{display:flex;align-items:center;gap:var(--s3);height:58px;}
+.mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(140deg,var(--brand),var(--violet));color:#fff;font-weight:800;font-size:14px;}
+.hname{font-weight:650;letter-spacing:-.01em;font-size:15px;}
+header nav{margin-left:auto;display:flex;gap:var(--s5);font-size:14px;}
+header nav a{color:var(--ink-2);text-decoration:none;}
+header nav a:hover{color:var(--ink);}
+@media(max-width:720px){header nav{display:none;}}
+
+/* hero */
+.hero{padding:var(--s12) 0 var(--s10);}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:99px;
+  background:var(--brand-bg);color:var(--brand);font-size:12.5px;font-weight:650;letter-spacing:.02em;}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.12;letter-spacing:-.025em;margin:var(--s4) 0 var(--s3);max-width:19ch;}
+.lede{font-size:clamp(16px,2.2vw,19px);line-height:1.6;color:var(--ink-2);max-width:62ch;margin:0;}
+.cta{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s6);}
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 var(--s5);border-radius:9px;
+  font-size:14.5px;font-weight:600;text-decoration:none;background:var(--brand);color:#fff;}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line);}
+.btn:hover{filter:brightness(1.08);}
+
+/* notice */
+.callout{display:flex;gap:var(--s3);padding:var(--s4);border-radius:var(--r);
+  background:var(--warn-bg);border:1px solid var(--warn);margin-top:var(--s8);}
+.callout .ic{font-size:18px;line-height:1.2;}
+.callout p{margin:0;font-size:14.5px;line-height:1.6;color:var(--ink);}
+.callout b{color:var(--warn);}
+
+/* sections */
+section{padding:var(--s12) 0;}
+h2{font-size:clamp(22px,3vw,30px);letter-spacing:-.02em;margin:0 0 var(--s3);}
+h3{font-size:17px;margin:0 0 var(--s2);letter-spacing:-.01em;}
+.sub{color:var(--ink-2);max-width:66ch;margin:0 0 var(--s6);font-size:16px;}
+.grid{display:grid;gap:var(--s3);}
+@media(min-width:760px){.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:repeat(3,1fr);}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s5);}
+.card p{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.6;}
+.card .tag{display:inline-block;margin-bottom:var(--s2);padding:3px 8px;border-radius:5px;
+  font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
+.t-fin{background:var(--brand-bg);color:var(--brand);}
+.t-it{background:var(--violet-bg);color:var(--violet);}
+.t-ok{background:var(--ok-bg);color:var(--ok);}
+.t-bad{background:var(--bad-bg);color:var(--bad);}
+
+/* loop */
+.loop{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin:var(--s5) 0 0;}
+.loop span{padding:7px 13px;border-radius:99px;background:var(--panel);border:1px solid var(--line);
+  font-size:13px;font-weight:600;font-family:var(--mono);}
+.loop span.v{border-color:var(--ok);color:var(--ok);}
+.loop i{color:var(--ink-3);font-style:normal;}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-2);vertical-align:top;}
+th{background:var(--sunk);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;}
+tr:last-child td{border-bottom:0;}
+code{font-family:var(--mono);font-size:.9em;background:var(--sunk);padding:2px 5px;border-radius:4px;}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+@media(min-width:620px){.stats{grid-template-columns:repeat(4,1fr);}}
+.stat{background:var(--panel);padding:var(--s4) var(--s5);}
+.stat .v{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.stat .k{font-size:12.5px;color:var(--ink-3);margin-top:2px;}
+
+/* verdict rows */
+.verdict{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+.vrow{display:grid;grid-template-columns:auto 1fr;gap:var(--s3);padding:var(--s3) var(--s4);
+  border-bottom:1px solid var(--line-2);font-size:14px;}
+.vrow:last-child{border-bottom:0;}
+.pill{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;
+  font-size:11px;font-weight:700;white-space:nowrap;}
+.pill.met{background:var(--ok-bg);color:var(--ok);}
+.pill.no{background:var(--bad-bg);color:var(--bad);}
+.vrow .ev{display:block;color:var(--ink-3);font-size:12.5px;margin-top:3px;font-family:var(--mono);line-height:1.5;}
+
+/* shots */
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+figure img{width:100%;}
+figcaption{padding:var(--s3) var(--s4);font-size:13px;color:var(--ink-2);border-top:1px solid var(--line-2);}
+ul.lean{margin:0;padding-left:var(--s5);color:var(--ink-2);font-size:14.5px;}
+ul.lean li{margin-bottom:7px;}
+footer{padding:var(--s10) 0 var(--s12);border-top:1px solid var(--line);color:var(--ink-3);font-size:14px;}
+footer a{color:var(--ink-2);}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <span class="mark">C</span><span class="hname">CentrAlign Operator</span>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#decisions">Decisions</a>
+    <a href="#limits">Limits</a>
+    <a href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">GitHub</a>
+  </nav>
+</div></header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">AI Employee · Autonomous Company Operator</span>
+    <h1>It does the work, then checks whether it actually got done.</h1>
+    <p class="lede">
+      An autonomous operator that turns a one-line request — <em>“the vendor invoices in the
+      shared drive need processing”</em> — into completed work across four real surfaces:
+      documents on a shared drive, a browser-driven ERP, internal JSON APIs, and a Windows
+      desktop application driven through UI Automation.
+    </p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">View the source</a>
+      <a class="btn ghost" href="#evidence">See a real run</a>
+    </div>
+
+    <div class="callout">
+      <span class="ic">⚠︎</span>
+      <p><b>This page is a showcase, not the running operator.</b> The operator drives a real
+      Chromium instance and a real desktop window, and a run takes minutes — none of which fits a
+      serverless host. Everything below is taken from genuine runs: the figures, the verdicts and
+      the screenshots are real output, not mockups. To watch it work, clone the repo and run it
+      locally, or deploy the included Docker image.</p>
+    </div>
+  </div>
+
+  <!-- ================= how ================= -->
+  <section id="how" class="rule">
+    <h2>The loop</h2>
+    <p class="sub">A plan is a living artifact, not a frozen script: any observation can revise,
+    insert into or replace the remaining steps. And when a plan runs out, that is not the same as
+    the work being finished — the planner is asked to carry on.</p>
+    <div class="loop">
+      <span>Goal</span><i>→</i><span>Understand</span><i>→</i><span>Plan</span><i>→</i>
+      <span>Execute</span><i>→</i><span>Observe</span><i>→</i><span>Adapt</span><i>→</i>
+      <span class="v">Verify</span><i>→</i><span>Complete</span>
+    </div>
+
+    <h2 style="margin-top:var(--s10)">Two bets</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>An agent's report on its own work is worthless</h3>
+        <p>Agents are confidently wrong about their own success more than anything else. A form
+        submitted into a validation error reads as a successful click. So acceptance criteria are
+        fixed <em>at intake</em>, before any work exists to rationalise. Afterwards a verifier
+        re-reads the systems of record through a registry <strong>filtered in code</strong> to
+        read-only tools — it cannot repair what it is meant to judge — and an unmet criterion
+        overrides the model's own completion claim.</p>
+      </div>
+      <div class="card">
+        <h3>Generalisation is architecture, not prompting</h3>
+        <p>The kernel holds no domain logic and never names a tool. The proof: a second, unrelated
+        task family was added without changing a line of the kernel, the tool base, the policy
+        engine or the verifier. It arrived as an SOP, a YAML connector spec and one new tool
+        surface. What this operator <em>does</em> lives in <code>company/</code>, not in its code.</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top:var(--s10)">Four surfaces, two task families</h2>
+    <div class="grid g2">
+      <div class="card">
+        <span class="tag t-fin">Finance</span>
+        <h3>Accounts-payable invoice processing</h3>
+        <p>Five invoices arrive as PDFs. Two are clean; one is over-billed against its purchase
+        order; one references a PO that does not exist, from a vendor absent from the approved
+        master; one is a duplicate. Two files are not invoices at all. An operator that approves
+        all five is wrong — and so is one that approves two and says nothing about the rest.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-it">IT operations</span>
+        <h3>New-joiner onboarding</h3>
+        <p>A prose memo, not a form. The operator derives the username from the SOP's convention,
+        creates the account in a <em>desktop application</em> (writes are GUI-only — there is no
+        API for them), issues the role's standard kit from available stock, and grants access.
+        One requested group is restricted, so the app refuses and it must escalate.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= evidence ================= -->
+  <section id="evidence" class="rule">
+    <h2>A real run</h2>
+    <p class="sub">Gemini making every decision, driving a real Qt desktop window through Windows
+    UI Automation. Figures taken verbatim from the run's evidence bundle.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="v">49</div><div class="k">steps executed</div></div>
+      <div class="stat"><div class="v">25</div><div class="k">model calls</div></div>
+      <div class="stat"><div class="v">11</div><div class="k">plan revisions</div></div>
+      <div class="stat"><div class="v">613s</div><div class="k">elapsed</div></div>
+    </div>
+
+    <h3 style="margin-top:var(--s6)">Verdict — 5 of 5 criteria met, verified against the systems</h3>
+    <div class="verdict">
+      <div class="vrow"><span class="pill met">MET</span><span>The setup memo is read and the joiner's details extracted
+        <span class="ev">drive_read returned: “joins us on Monday 2026-10-06 as a QA Engineer”</span></span></div>
+      <div class="vrow"><span class="pill met">MET</span><span>The account exists with the correct derived username and role
+        <span class="ev">account_lookup p.venkatesan → active · QA Engineer · Engineering</span></span></div>
+      <div class="vrow"><span class="pill met">MET</span><span>The role's standard hardware kit is assigned
+        <span class="ev">asset_lookup assigned_to=p.venkatesan → LAP-0141 laptop, MON-0088 monitor</span></span></div>
+      <div class="vrow"><span class="pill met">MET</span><span>The account is enrolled in the required access groups
+        <span class="ev">access_group_lookup → eng-general, qa-automation, vpn-standard</span></span></div>
+      <div class="vrow"><span class="pill met">MET</span><span>A restricted-group request is escalated rather than forced</span></div>
+    </div>
+    <p style="margin-top:var(--s3);font-size:14px;">
+      <a href="/assets/report-onboarding.md">Full report</a> ·
+      <a href="/assets/verification-onboarding.md">Verification evidence</a>
+    </p>
+
+    <h2 style="margin-top:var(--s10)">And a run that did <em>not</em> pass</h2>
+    <p class="sub">This is the part worth looking at. The operator provisioned the joiner
+    correctly and reported success — but the verifier read the group membership list, found the
+    requested restricted group had neither been granted nor escalated, and marked the run
+    <strong>partial</strong> at 75% confidence. The system contradicted itself, in writing,
+    without being asked to.</p>
+    <div class="verdict">
+      <div class="vrow"><span class="pill no">NOT MET</span><span>A restricted-group request is escalated rather than provisioned incorrectly
+        <span class="ev">The members list for 'finance-systems' does not include p.venkatesan, and no escalation was recorded.</span></span></div>
+    </div>
+    <p style="margin-top:var(--s3);font-size:14px;"><a href="/assets/report-partial.md">Full report</a></p>
+
+    <h2 style="margin-top:var(--s10)">Evidence is a side effect, not a reconstruction</h2>
+    <p class="sub">Every browser and desktop action screenshots itself as it happens. These are
+    frames from the run above — the operator filling and submitting a real Qt form.</p>
+    <div class="grid g3">
+      <figure><img src="/assets/desktop-create-account.png" alt="The operator creating a user account in the desktop application" loading="lazy">
+        <figcaption>Creating the account — desktop app, via UI Automation</figcaption></figure>
+      <figure><img src="/assets/desktop-assets.png" alt="The hardware asset register in the desktop application" loading="lazy">
+        <figcaption>Reading the asset register to find available hardware</figcaption></figure>
+      <figure><img src="/assets/desktop-grant.png" alt="Granting an access group in the desktop application" loading="lazy">
+        <figcaption>Granting access — and being refused on the restricted group</figcaption></figure>
+    </div>
+
+    <h2 style="margin-top:var(--s10)">Watching it think</h2>
+    <p class="sub">The dashboard streams every decision as it happens: what it understood, what it
+    planned, each action and its observation, every recovery, and the final verdict against the
+    criteria it set for itself.</p>
+    <div class="grid g2">
+      <figure><img src="/assets/dashboard-light.png" alt="The operator dashboard in light mode" loading="lazy">
+        <figcaption>Live dashboard — plan, criteria and evidence</figcaption></figure>
+      <figure><img src="/assets/dashboard-dark.png" alt="The operator dashboard in dark mode, awaiting human approval" loading="lazy">
+        <figcaption>Paused for a human: an approval it is not authorised to make</figcaption></figure>
+    </div>
+    <figure style="margin-top:var(--s3)"><img src="/assets/decision-stream.png" alt="The decision stream showing planning, failure and recovery" loading="lazy">
+      <figcaption>The decision stream — including a loop guard tripping and the operator replanning around it</figcaption></figure>
+  </section>
+
+  <!-- ================= decisions ================= -->
+  <section id="decisions" class="rule">
+    <h2>Decisions worth arguing about</h2>
+    <table>
+      <thead><tr><th style="width:34%">Decision</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Schema-constrained JSON, never vendor tool-calling</td>
+          <td>Tool-calling semantics differ enough across providers that a swap would ripple into the kernel. Changing model is now one environment variable.</td></tr>
+        <tr><td>Risk is computed, never self-reported</td>
+          <td>The model proposes; a declarative policy engine decides. A model that could declare its own actions low-risk would eventually talk past every gate — by accident if not by injection.</td></tr>
+        <tr><td>Credentials never reach the model</td>
+          <td>Sign-in takes an <em>account role</em>; the secret is resolved in the tool layer. The model can ask to act as the finance controller — and policy can refuse — but cannot read or type a password.</td></tr>
+        <tr><td>Refusals are not faults</td>
+          <td>“This vendor is not approved” is information the SOP already covers; retrying changes nothing. A 503 should cost a retry, not a reasoning cycle. The failure taxonomy keeps the two apart.</td></tr>
+        <tr><td>Never blindly retry a non-idempotent action</td>
+          <td>Re-firing a write risks double-executing work the first attempt may have partly completed. Found by a test: a 5xx on a form submit was being reported as <em>success</em>.</td></tr>
+        <tr><td>BM25 over company memory, not embeddings</td>
+          <td>A few hundred short, jargon-dense operational documents where exact matching on <code>PO-4471</code> beats semantic similarity — and it runs offline, for free.</td></tr>
+        <tr><td>A nine-model fallback chain</td>
+          <td>The free tier meters 20 calls per day <em>per model</em>, so breadth multiplies capacity. A daily-quota 429 carries an eleven-hour retry delay — honouring it literally would hang a run until morning.</td></tr>
+      </tbody>
+    </table>
+    <p class="sub" style="margin-top:var(--s5)">No agent framework. No LangChain, no vector database.
+    The control loop, the failure taxonomy and the verification design are the substance here, and
+    wrapping someone else's loop would have hidden exactly the parts worth evaluating.</p>
+  </section>
+
+  <!-- ================= limits ================= -->
+  <section id="limits" class="rule">
+    <h2>Known limits</h2>
+    <p class="sub">Stated plainly, because they are the honest edges of a prototype.</p>
+    <ul class="lean">
+      <li><strong>Verification is only as good as its criteria</strong>, and the criteria come from
+        the model. The partial run above is a real instance: the harness behaved correctly, but the
+        criterion the model wrote for itself was too weak. Versioned criteria libraries per task
+        type are the fix, and the next thing to build.</li>
+      <li><strong>Both computer-use surfaces are accessibility-based, not vision-based.</strong>
+        When an accessibility tree exists this is strictly better — deterministic, no OCR, a few
+        hundred tokens instead of pixels — but it will not drive a canvas app or a remote desktop.</li>
+      <li><strong>The desktop surface is Windows-only.</strong> UI Automation is a Windows API, so
+        on other platforms those tools are not registered at all and the operator presents only the
+        surfaces it genuinely has.</li>
+      <li><strong>Runs execute in-process.</strong> The kernel is written for a durable queue — a run
+        is one serializable state object plus an event log — but the queue and worker recovery are
+        not built.</li>
+      <li><strong>Prompt injection is mitigated, not solved.</strong> Documents are framed as data,
+        secrets are excluded from memory, policy is not a prompt — but a document that persuades the
+        planner to take a permitted action in a harmful order is not caught today.</li>
+      <li><strong>Free-tier models wander.</strong> The run above took 49 steps and 11 plan revisions
+        for work a tight plan does in 23. Nothing in the architecture assumes the cheap model.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><strong>202 tests, no API key required.</strong> The full-workflow tests assert against
+    sandbox state rather than the operator's account of it — including a run that approves an
+    invoice but never posts it to the ledger, where the operator's own record says “completed” and
+    verification must contradict it.</p>
+    <p style="margin-bottom:0">
+      <a href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">Source on GitHub</a> ·
+      Built by Kaveri Mekala for the CentrAlign AI Founding Engineer submission
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

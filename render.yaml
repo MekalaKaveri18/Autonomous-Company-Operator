@@ -1,30 +1,41 @@
 # Render blueprint. `render.yaml` in the repo root means the service can be
-# created from the repo with no console clicking.
+# created straight from the repo with no console clicking.
 #
-# Memory matters more than CPU here: Chromium needs roughly 512MB on its own, so
-# the free 512MB instance will be killed mid-run. `standard` is the smallest tier
-# that reliably holds a browser plus the three services.
+# `free` is deliberate, and it works because of what read-only mode does NOT do.
+# With OPERATOR_PUBLIC_DEMO=1 and no token, no run can start, so Chromium is never
+# launched: the container is just Python, FastAPI and SQLite. Measured footprint
+# is ~50MB against the free tier's 512MB. Visitors browse every recorded run,
+# its full decision stream and its evidence bundle.
+#
+# To let the deployed instance actually RUN the operator, set GEMINI_API_KEY and
+# OPERATOR_DEMO_TOKEN and move to `standard`. Chromium alone wants roughly 512MB,
+# so the free tier will be OOM-killed mid-browse -- the failure looks like a
+# mysterious restart rather than an out-of-memory error, which is worth knowing
+# before you spend an afternoon on it.
 services:
   - type: web
     name: centralign-operator
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard
+    plan: free
     healthCheckPath: /api/runs
     envVars:
-      - key: OPERATOR_LLM_PROVIDER
-        value: gemini
-      # The free tier meters 20 requests per day PER MODEL, so the chain is
-      # what makes a deployed demo usable rather than a single-run novelty.
-      - key: OPERATOR_LLM_MODEL
-        value: gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemma-4-31b-it
-      - key: GEMINI_API_KEY
-        sync: false          # set in the dashboard; never committed
       - key: OPERATOR_PUBLIC_DEMO
         value: "1"
-      - key: OPERATOR_DEMO_TOKEN
-        sync: false          # omit entirely to make the instance read-only
       - key: OPERATOR_HEADLESS
         value: "1"
+      - key: OPERATOR_LLM_PROVIDER
+        value: gemini
+      # The free Gemini tier meters 20 requests per day PER MODEL, so a wide
+      # chain is what makes a live instance usable rather than a one-run novelty.
+      - key: OPERATOR_LLM_MODEL
+        value: gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemma-4-31b-it
+      # Both unset on purpose: without a key and a token the instance stays
+      # read-only, which is what keeps it free and keeps a passing visitor from
+      # spending the owner's daily quota.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPERATOR_DEMO_TOKEN
+        sync: false
       - key: OPERATOR_WALL_CLOCK_SECONDS
         value: "900"
