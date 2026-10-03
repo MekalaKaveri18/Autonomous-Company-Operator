@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ invoice.number }} - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Invoice {{ invoice.number }}</h1>
+<div class="card">
+  <dl class="kv">
+    <dt>Status</dt><dd id="invoice-status"><span class="pill {{ invoice.status }}">{{ invoice.status }}</span></dd>
+    <dt>Vendor</dt><dd>{{ invoice.vendor }}</dd>
+    <dt>Purchase order</dt><dd>{% if po %}<a href="/purchase-orders/{{ po.number }}">{{ invoice.po_number }}</a>{% else %}{{ invoice.po_number }} (not found){% endif %}</dd>
+    <dt>Amount</dt><dd id="invoice-amount">{{ invoice.currency }} {{ invoice.amount|inr }}</dd>
+    {% if remaining is not none %}<dt>PO remaining before this invoice</dt><dd>{{ invoice.currency }} {{ remaining|inr }}</dd>{% endif %}
+    <dt>Invoice date</dt><dd>{{ invoice.invoice_date or "-" }}</dd>
+    <dt>GL code</dt><dd>{{ invoice.gl_code or "-" }}</dd>
+    <dt>Registered by</dt><dd>{{ invoice.registered_by or "-" }}</dd>
+    <dt>Approved by</dt><dd>{{ invoice.approved_by or "-" }}</dd>
+    {% if invoice.notes %}<dt>Notes</dt><dd>{{ invoice.notes }}</dd>{% endif %}
+  </dl>
+</div>
+<h2>Actions</h2>
+<div class="card">
+  <form class="inline" method="post" action="/invoices/{{ invoice.id }}/approve">
+    <button type="submit">Approve invoice</button>
+  </form>
+  <form method="post" action="/invoices/{{ invoice.id }}/hold" style="margin-top:16px">
+    <label for="reason">Reason for placing on hold</label>
+    <textarea id="reason" name="reason" rows="3" required></textarea>
+    <div style="margin-top:10px"><button class="secondary" type="submit">Place on hold</button></div>
+  </form>
+</div>
+<h2>History</h2>
+<table>
+  <thead><tr><th>Action</th><th>By</th><th>Detail</th></tr></thead>
+  <tbody>
+  {% for h in invoice.history %}
+    <tr><td>{{ h.action }}</td><td>{{ h.by }}</td><td>{{ h.reason or "-" }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

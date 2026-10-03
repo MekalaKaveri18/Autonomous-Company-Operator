@@ -1,0 +1,30 @@
+# Render blueprint. `render.yaml` in the repo root means the service can be
+# created from the repo with no console clicking.
+#
+# Memory matters more than CPU here: Chromium needs roughly 512MB on its own, so
+# the free 512MB instance will be killed mid-run. `standard` is the smallest tier
+# that reliably holds a browser plus the three services.
+services:
+  - type: web
+    name: centralign-operator
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard
+    healthCheckPath: /api/runs
+    envVars:
+      - key: OPERATOR_LLM_PROVIDER
+        value: gemini
+      # The free tier meters 20 requests per day PER MODEL, so the chain is
+      # what makes a deployed demo usable rather than a single-run novelty.
+      - key: OPERATOR_LLM_MODEL
+        value: gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemma-4-31b-it
+      - key: GEMINI_API_KEY
+        sync: false          # set in the dashboard; never committed
+      - key: OPERATOR_PUBLIC_DEMO
+        value: "1"
+      - key: OPERATOR_DEMO_TOKEN
+        sync: false          # omit entirely to make the instance read-only
+      - key: OPERATOR_HEADLESS
+        value: "1"
+      - key: OPERATOR_WALL_CLOCK_SECONDS
+        value: "900"

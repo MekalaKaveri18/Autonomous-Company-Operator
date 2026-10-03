@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CentrAlign Operator</title>
+<style>
+/* ===========================================================================
+   Everything is hand-written and self-contained: no CDN, no webfont fetch, no
+   build step. The whole point of this project is that it runs on a laptop with
+   the network unplugged, and a dashboard that blanks out without cdn.tailwind
+   would make a liar of it. System font stacks look native on each OS anyway.
+
+   Layout rests on one 4px spacing scale and one type scale. Every gap, pad and
+   font size below is drawn from them, which is what stops a dense tool like
+   this drifting into the ragged, slightly-off look it had before.
+   =========================================================================== */
+:root {
+  /* spacing — 4px scale */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  /* type */
+  --t-micro:10.5px; --t-tiny:11.5px; --t-small:12.5px; --t-body:13.5px;
+  --t-lead:15px; --t-title:17px;
+  --lh:1.55;
+  /* geometry */
+  --r-sm:6px; --r:9px; --r-lg:13px;
+  --rail-l:312px; --rail-r:384px; --gut:5px;
+  --head-h:58px;
+  --ctl-h:34px;
+
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Consolas,monospace;
+
+  /* light */
+  --bg:#fcfcfd; --panel:#ffffff; --sunk:#f4f5f7; --raised:#fafbfc;
+  --line:#e4e6ea; --line-2:#eef0f3;
+  --ink:#16181d; --ink-2:#565c66; --ink-3:#8b919b; --ink-4:#aeb3bb;
+  --brand:#3558f2; --brand-ink:#2a46c4; --brand-bg:#eef2ff;
+  --ok:#0b875b; --ok-bg:#e6f6ef;
+  --warn:#9a6200; --warn-bg:#fdf3e0;
+  --bad:#c92a2a; --bad-bg:#fdeceb;
+  --violet:#6b3fd4; --violet-bg:#f1ecfe;
+  --shadow-1:0 1px 2px rgba(16,18,24,.06);
+  --shadow-2:0 1px 3px rgba(16,18,24,.07),0 6px 20px -6px rgba(16,18,24,.10);
+  --ring:0 0 0 3px rgba(53,88,242,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0d10; --panel:#14161a; --sunk:#101216; --raised:#181b20;
+    --line:#252931; --line-2:#1d2128;
+    --ink:#e9ebef; --ink-2:#9ea5b0; --ink-3:#6e757f; --ink-4:#565c66;
+    --brand:#7b95ff; --brand-ink:#9cb0ff; --brand-bg:#16203f;
+    --ok:#46c98b; --ok-bg:#0f2a1f;
+    --warn:#e0a83c; --warn-bg:#2b2211;
+    --bad:#f1736c; --bad-bg:#2e1716;
+    --violet:#a98bf5; --violet-bg:#201a35;
+    --shadow-1:0 1px 2px rgba(0,0,0,.5);
+    --shadow-2:0 1px 3px rgba(0,0,0,.5),0 8px 24px -8px rgba(0,0,0,.6);
+    --ring:0 0 0 3px rgba(123,149,255,.22);
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:400 var(--t-body)/var(--lh) var(--sans);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  font-variant-numeric:tabular-nums;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+a{color:var(--brand);text-decoration:none;}
+a:hover{text-decoration:underline;}
+::selection{background:var(--brand-bg);}
+
+/* thin, unobtrusive scrollbars — three independently scrolling panes with
+   default chunky bars read as clutter */
+.scroll{scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
+.scroll::-webkit-scrollbar{width:9px;height:9px;}
+.scroll::-webkit-scrollbar-track{background:transparent;}
+.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid var(--bg);}
+.scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-4);}
+
+/* ============================ top bar ============================ */
+.topbar{
+  position:sticky;top:0;z-index:30;height:var(--head-h);
+  display:flex;align-items:center;gap:var(--s3);
+  padding:0 var(--s5);background:var(--panel);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:var(--s3);min-width:0;}
+.brand .mark{
+  width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(140deg,var(--brand),var(--violet));
+  color:#fff;font-weight:700;font-size:var(--t-body);letter-spacing:-.02em;
+}
+.brand .names{display:flex;flex-direction:column;justify-content:center;min-width:0;}
+.brand .name{font-size:var(--t-body);font-weight:650;letter-spacing:-.01em;line-height:1.25;}
+.brand .sub{font-size:var(--t-micro);color:var(--ink-3);line-height:1.3;letter-spacing:.03em;}
+.topbar .fill{margin-left:auto;}
+.meta{display:flex;align-items:center;gap:var(--s2);}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;
+  border-radius:99px;background:var(--raised);border:1px solid var(--line);
+  font-size:var(--t-tiny);font-weight:500;color:var(--ink-2);white-space:nowrap;
+}
+.chip b{font-weight:650;color:var(--ink);}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ink-4);flex:none;}
+.chip .dot.live{box-shadow:0 0 0 3px color-mix(in srgb,currentColor 18%,transparent);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.chip .dot.busy{animation:pulse 1.4s ease-in-out infinite;}
+
+/* ============================ shell ============================ */
+.shell{
+  display:grid;
+  grid-template-columns:var(--rail-l) var(--gut) minmax(0,1fr) var(--gut) var(--rail-r);
+  height:calc(100vh - var(--head-h));
+}
+.pane{overflow-y:auto;overflow-x:hidden;min-width:0;padding:0 var(--s5) var(--s8);}
+.pane.mid{background:var(--sunk);}
+
+/* ---- draggable splitters -------------------------------------------------
+   The three panes carry very different content -- a narrow composer, a wide
+   decision stream, a dense status rail -- and which one you want room for
+   depends entirely on what you are doing. The divider IS the handle: a hairline
+   that widens its hit area invisibly, so it reads as a border until you reach
+   for it. */
+.handle{
+  position:relative;background:var(--line);cursor:col-resize;
+  touch-action:none;transition:background .12s;
+}
+.handle::after{content:"";position:absolute;top:0;bottom:0;left:-4px;right:-4px;z-index:6;}
+.handle::before{
+  content:"";position:absolute;top:50%;left:50%;width:3px;height:26px;
+  transform:translate(-50%,-50%);border-radius:99px;background:transparent;
+  transition:background .12s;
+}
+.handle:hover,.handle:focus-visible,.handle.live{background:var(--brand);}
+.handle:hover::before,.handle.live::before{background:var(--brand);}
+.handle:focus-visible{outline:none;}
+/* while dragging, nothing else should take the pointer or highlight text */
+body.resizing{cursor:col-resize;user-select:none;}
+body.resizing iframe,body.resizing .pane{pointer-events:none;}
+
+/* sticky section headers, so a long scroll never loses its place */
+.sec{
+  position:sticky;top:0;z-index:5;
+  display:flex;align-items:center;gap:var(--s2);
+  margin:0 calc(-1 * var(--s5));padding:var(--s5) var(--s5) var(--s2);
+  background:var(--bg);
+  font-size:var(--t-micro);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);
+}
+.pane.mid .sec{background:var(--sunk);}
+.sec .count{
+  margin-left:auto;font-weight:600;letter-spacing:.02em;text-transform:none;
+  font-size:var(--t-tiny);color:var(--ink-4);
+}
+
+/* ============================ controls ============================ */
+.composer{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);overflow:hidden;
+}
+.composer textarea{
+  display:block;width:100%;border:0;outline:none;resize:none;
+  padding:var(--s3) var(--s3) var(--s2);background:transparent;color:var(--ink);
+  font:inherit;line-height:1.5;min-height:74px;max-height:200px;
+}
+.composer textarea::placeholder{color:var(--ink-4);}
+.composer:focus-within{border-color:var(--brand);box-shadow:var(--ring);}
+.composer .bar{
+  display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s2) var(--s3) var(--s3);
+}
+.composer .hint{
+  margin-left:auto;font-size:var(--t-micro);color:var(--ink-4);white-space:nowrap;
+}
+kbd{
+  font:600 var(--t-micro)/1 var(--mono);padding:3px 5px;border-radius:4px;
+  background:var(--sunk);border:1px solid var(--line);color:var(--ink-3);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:var(--ctl-h);padding:0 var(--s4);border-radius:var(--r-sm);
+  background:var(--brand);color:#fff;font-size:var(--t-small);font-weight:600;
+  white-space:nowrap;transition:filter .12s,opacity .12s,background .12s;
+}
+.btn:hover:not(:disabled){filter:brightness(1.08);}
+.btn:active:not(:disabled){filter:brightness(.94);}
+.btn:disabled{opacity:.45;cursor:default;}
+.btn.quiet{background:var(--raised);color:var(--ink-2);border:1px solid var(--line);}
+.btn.quiet:hover:not(:disabled){background:var(--sunk);filter:none;}
+.btn.ok{background:var(--ok);}
+.btn.bad{background:var(--bad);}
+.btn.sm{height:30px;padding:0 var(--s3);font-size:var(--t-tiny);}
+
+/* ============================ example tasks ============================ */
+.task{
+  display:block;width:100%;text-align:left;
+  padding:var(--s3);margin-bottom:var(--s2);
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  transition:border-color .12s,box-shadow .12s;
+}
+.task:hover{border-color:var(--brand);box-shadow:var(--shadow-1);}
+.task .tag{
+  display:inline-block;margin-bottom:var(--s2);padding:2px 7px;border-radius:5px;
+  font-size:var(--t-micro);font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+}
+.tag.fin{background:var(--brand-bg);color:var(--brand-ink);}
+.tag.it{background:var(--violet-bg);color:var(--violet);}
+.tag.mix{background:var(--ok-bg);color:var(--ok);}
+.task .text{font-size:var(--t-small);line-height:1.5;color:var(--ink);}
+.task .why{margin-top:6px;font-size:var(--t-micro);line-height:1.45;color:var(--ink-3);}
+
+/* ============================ run list ============================ */
+.run{
+  display:grid;grid-template-columns:1fr auto;align-items:center;
+  gap:var(--s2);padding:var(--s2) var(--s3);margin-bottom:6px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  cursor:pointer;transition:border-color .12s;
+}
+.run:hover{border-color:var(--brand);}
+.run.on{border-color:var(--brand);background:var(--brand-bg);}
+.run .goal{
+  font-size:var(--t-small);font-weight:500;line-height:1.4;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.run .when{font-size:var(--t-micro);color:var(--ink-4);font-family:var(--mono);}
+
+/* ============================ badges ============================ */
+.badge{
+  display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:99px;
+  font-size:var(--t-micro);font-weight:700;letter-spacing:.03em;white-space:nowrap;flex:none;
+  background:var(--sunk);color:var(--ink-2);
+}
+.badge.ok,.badge.met,.badge.succeeded,.badge.completed{background:var(--ok-bg);color:var(--ok);}
+.badge.bad,.badge.unmet,.badge.failed,.badge.aborted{background:var(--bad-bg);color:var(--bad);}
+.badge.warn,.badge.partial,.badge.awaiting_human,.badge.unverifiable,
+.badge.pending,.badge.skipped,.badge.running,.badge.executing,
+.badge.planning,.badge.verifying,.badge.understanding,.badge.created{background:var(--warn-bg);color:var(--warn);}
+
+/* ============================ timeline ============================ */
+#events{padding-top:var(--s1);}
+.ev{display:grid;grid-template-columns:18px minmax(0,1fr);gap:var(--s3);}
+.ev .rail{position:relative;}
+.ev .rail::before{
+  content:"";position:absolute;left:50%;top:16px;bottom:-2px;width:1.5px;
+  background:var(--line);transform:translateX(-50%);
+}
+.ev:last-child .rail::before{display:none;}
+.ev .pip{
+  position:absolute;left:50%;top:7px;transform:translateX(-50%);
+  width:9px;height:9px;border-radius:50%;background:var(--ink-4);
+  box-shadow:0 0 0 3px var(--sunk);
+}
+.ev .body{padding-bottom:var(--s4);min-width:0;}
+.ev .head{
+  display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2);
+  min-height:20px;
+}
+.ev .phase{font-size:var(--t-micro);font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);}
+.ev .sid{font-family:var(--mono);font-size:var(--t-micro);color:var(--ink-4);}
+.ev .ms{margin-left:auto;font-family:var(--mono);font-size:var(--t-micro);color:var(--ink-4);}
+.ev .msg{margin-top:3px;font-size:var(--t-body);line-height:1.5;word-break:break-word;}
+.ev .msg.bad{color:var(--bad);}
+.ev .detail{
+  margin-top:var(--s2);padding:var(--s2) var(--s3);
+  background:var(--panel);border:1px solid var(--line-2);border-left:2px solid var(--line);
+  border-radius:var(--r-sm);
+  font:400 var(--t-tiny)/1.6 var(--mono);color:var(--ink-2);
+  white-space:pre-wrap;word-break:break-word;
+  max-height:184px;overflow-y:auto;
+}
+/* Structured detail as a real grid, not space-padded monospace.
+   Padding columns with spaces only holds while every line fits: the moment a
+   step intent wraps, the continuation starts at column 0 and the whole block
+   reads as broken. In a grid each cell wraps inside its own column, so the
+   alignment survives any length. */
+.ev .rows{
+  margin-top:var(--s2);padding:var(--s2) var(--s3);
+  background:var(--panel);border:1px solid var(--line-2);border-left:2px solid var(--line);
+  border-radius:var(--r-sm);
+  display:grid;column-gap:var(--s3);row-gap:5px;align-items:baseline;
+  max-height:220px;overflow-y:auto;
+  font-size:var(--t-tiny);line-height:1.55;color:var(--ink-2);
+}
+.ev .rows.c2{grid-template-columns:auto minmax(0,1fr);}
+.ev .rows.c3{grid-template-columns:auto auto minmax(0,1fr);}
+.ev .rows .k{font-family:var(--mono);color:var(--ink-3);white-space:nowrap;}
+.ev .rows .t{font-family:var(--mono);color:var(--brand);white-space:nowrap;}
+.ev .rows .v{min-width:0;word-break:break-word;}
+.ev .rows .s{
+  font-size:var(--t-micro);font-weight:700;letter-spacing:.04em;white-space:nowrap;
+}
+.ev .rows .s.met{color:var(--ok);}
+.ev .rows .s.unmet,.ev .rows .s.unverifiable{color:var(--bad);}
+.surface{
+  padding:1px 6px;border-radius:4px;background:var(--sunk);color:var(--ink-3);
+  font-size:var(--t-micro);font-weight:650;letter-spacing:.05em;text-transform:uppercase;
+}
+.ev.p-plan .pip,.ev.p-replan .pip{background:var(--violet);}
+.ev.p-plan .phase,.ev.p-replan .phase{color:var(--violet);}
+.ev.p-observe .pip,.ev.p-done .pip{background:var(--ok);}
+.ev.p-observe .phase,.ev.p-done .phase{color:var(--ok);}
+.ev.p-execute .pip,.ev.p-verify .pip,.ev.p-understand .pip{background:var(--brand);}
+.ev.p-execute .phase,.ev.p-verify .phase,.ev.p-understand .phase{color:var(--brand);}
+.ev.p-adapt .pip,.ev.p-human .pip,.ev.p-policy .pip{background:var(--warn);}
+.ev.p-adapt .phase,.ev.p-human .phase,.ev.p-policy .phase{color:var(--warn);}
+.ev.p-failed .pip{background:var(--bad);}
+.ev.p-failed .phase{color:var(--bad);}
+.ev.p-run .pip{background:var(--ink-2);}
+.ev.p-run .phase{color:var(--ink);}
+
+/* ============================ right rail ============================ */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:var(--s3);box-shadow:var(--shadow-1);
+}
+.card + .card{margin-top:var(--s2);}
+.muted{color:var(--ink-3);font-size:var(--t-small);}
+
+.objective{font-size:var(--t-body);line-height:1.5;}
+.meter{height:4px;border-radius:99px;background:var(--line-2);overflow:hidden;margin:var(--s3) 0 var(--s2);}
+.meter i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .45s cubic-bezier(.2,.7,.3,1);}
+/* fixed 4-column grid: values on a shared baseline, labels beneath. The old
+   inline list wrapped mid-item and read as ragged. */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2);}
+.stats .stat{min-width:0;}
+.stats .v{font-size:var(--t-small);font-weight:650;line-height:1.3;white-space:nowrap;}
+.stats .k{font-size:var(--t-micro);color:var(--ink-4);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.crit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s2);padding:var(--s2) 0;}
+.crit + .crit{border-top:1px solid var(--line-2);}
+.crit .badge{margin-top:1px;}
+.crit .txt{font-size:var(--t-small);line-height:1.5;}
+.crit .note{margin-top:4px;font-size:var(--t-micro);line-height:1.5;color:var(--ink-3);}
+
+.stepline{
+  display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;
+  gap:var(--s2);padding:6px 0;
+}
+.stepline + .stepline{border-top:1px solid var(--line-2);}
+.stepline .sid{font-family:var(--mono);font-size:var(--t-micro);color:var(--ink-4);}
+.stepline .what{font-size:var(--t-small);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stepline .what .surface{margin-left:5px;}
+
+.ask{border-color:var(--warn);background:var(--warn-bg);}
+.ask .q{font-size:var(--t-small);line-height:1.55;white-space:pre-wrap;}
+.ask textarea{
+  display:block;width:100%;margin-top:var(--s3);padding:var(--s2);
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--panel);color:var(--ink);font:inherit;font-size:var(--t-small);resize:vertical;
+}
+.ask textarea:focus{outline:none;border-color:var(--warn);}
+.ask .row{display:flex;gap:var(--s2);margin-top:var(--s2);}
+
+.notice{
+  display:flex;gap:var(--s2);padding:var(--s2) var(--s3);margin-bottom:var(--s2);
+  background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r);
+  font-size:var(--t-tiny);line-height:1.5;color:var(--warn);
+}
+.notice b{font-weight:700;}
+.composer input.token{
+  display:block;width:100%;margin:0 var(--s3) var(--s2);width:calc(100% - 2*var(--s3));
+  padding:7px var(--s2);border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--sunk);color:var(--ink);font:inherit;font-size:var(--t-small);
+}
+.composer input.token:focus{outline:none;border-color:var(--brand);}
+.task.off{opacity:.5;}
+.task.off:hover{border-color:var(--line);box-shadow:none;cursor:not-allowed;}
+.task .off-why{
+  margin-top:6px;font-size:var(--t-micro);font-weight:650;color:var(--warn);
+}
+.links{display:flex;flex-wrap:wrap;gap:6px;}
+.links a{
+  font:500 var(--t-micro)/1 var(--mono);padding:6px 9px;border-radius:var(--r-sm);
+  background:var(--sunk);border:1px solid var(--line);color:var(--ink-2);
+}
+.links a:hover{border-color:var(--brand);color:var(--brand);text-decoration:none;}
+.attention{margin:0 0 var(--s2);padding-left:var(--s4);}
+.attention li{font-size:var(--t-small);line-height:1.5;margin-bottom:4px;}
+
+/* ============================ empty state ============================ */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;text-align:center;padding:12vh var(--s6);color:var(--ink-3);
+}
+.empty .glyph{
+  width:38px;height:38px;border-radius:11px;margin-bottom:var(--s2);
+  background:var(--panel);border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--ink-4);
+}
+.empty .lead{font-size:var(--t-lead);font-weight:600;color:var(--ink-2);}
+.empty .sub{font-size:var(--t-small);max-width:40ch;line-height:1.55;}
+
+@media (max-width:1240px){
+  :root{--rail-l:280px;--rail-r:340px;}
+}
+@media (max-width:1040px){
+  /* stacked: the splitters have nothing to split, so they become plain rules */
+  .shell{grid-template-columns:1fr;height:auto;}
+  .pane{max-height:none;}
+  .handle{height:1px;cursor:default;}
+  .handle::after,.handle::before{display:none;}
+  .topbar .meta .chip.optional{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">C</span>
+    <span class="names">
+      <span class="name">CentrAlign Operator</span>
+      <span class="sub">AUTONOMOUS COMPANY OPERATOR</span>
+    </span>
+  </div>
+  <div class="fill"></div>
+  <div class="meta">
+    <span class="chip" id="c-status"><span class="dot"></span><span id="c-status-t">idle</span></span>
+    <span class="chip optional" id="c-model">&mdash;</span>
+    <span class="chip optional" id="c-policy">&mdash;</span>
+    <span class="chip optional" id="c-tools">&mdash;</span>
+  </div>
+</header>
+
+<div class="shell">
+  <!-- ========================= left ========================= -->
+  <section class="pane scroll">
+    <h2 class="sec">Give it work</h2>
+    <div id="notice"></div>
+    <div class="composer">
+      <textarea id="goal" rows="3"
+        placeholder="Describe the outcome you want, the way you would ask a colleague&hellip;"></textarea>
+      <div class="bar">
+        <button class="btn" id="start">Start run</button>
+        <button class="btn quiet sm" id="reseed" title="Restore the sandbox company to its seed state">Reseed</button>
+        <span class="hint"><kbd>Ctrl</kbd> <kbd>&crarr;</kbd></span>
+      </div>
+    </div>
+
+    <h2 class="sec">Example requests</h2>
+    <div id="tasks"></div>
+
+    <h2 class="sec">Recent runs<span class="count" id="runs-count"></span></h2>
+    <div id="runs"></div>
+  </section>
+
+  <div class="handle" id="split-l" role="separator" aria-orientation="vertical"
+       aria-label="Resize the left panel" tabindex="0"
+       title="Drag to resize · double-click to reset · arrow keys to nudge"></div>
+
+  <!-- ========================= centre ========================= -->
+  <section class="pane mid scroll">
+    <h2 class="sec">Decision stream<span class="count" id="ev-count"></span></h2>
+    <div id="events"></div>
+    <div class="empty" id="events-empty">
+      <span class="glyph">&#9654;</span>
+      <span class="lead">Nothing running yet</span>
+      <span class="sub">Pick an example on the left, or write your own request. You will
+        see it understand, plan, act, adapt and verify &mdash; step by step.</span>
+    </div>
+  </section>
+
+  <div class="handle" id="split-r" role="separator" aria-orientation="vertical"
+       aria-label="Resize the right panel" tabindex="0"
+       title="Drag to resize · double-click to reset · arrow keys to nudge"></div>
+
+  <!-- ========================= right ========================= -->
+  <section class="pane scroll">
+    <div id="pending"></div>
+
+    <h2 class="sec">Objective</h2>
+    <div class="card" id="objective"><span class="muted">No run selected.</span></div>
+
+    <h2 class="sec">Acceptance criteria<span class="count" id="crit-count"></span></h2>
+    <div class="card" id="criteria"><span class="muted">Fixed at intake, before any work starts.</span></div>
+
+    <h2 class="sec">Plan<span class="count" id="plan-count"></span></h2>
+    <div class="card" id="plan"><span class="muted">&mdash;</span></div>
+
+    <h2 class="sec">Evidence</h2>
+    <div class="card" id="evidence"><span class="muted">Written when the run finishes.</span></div>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let currentRun = null, seenSeq = 0;
+
+/* ===========================================================================
+   Resizable panes
+   ---------------------------------------------------------------------------
+   Widths live as CSS custom properties on :root, so dragging is one style write
+   per frame and the grid does the rest -- no per-pane layout maths, and the
+   media query that stacks the panes on a narrow window keeps working untouched.
+
+   The centre pane is the one that must never be squeezed out, so both handles
+   clamp against the space it needs rather than only against their own minimum.
+   =========================================================================== */
+const PANES = {
+  '--rail-l': { def:312, min:232, max:560 },
+  '--rail-r': { def:384, min:288, max:640 },
+};
+const MID_MIN = 380;
+const STORE_KEY = 'centralign.panes';
+
+const railWidth = (name) =>
+  parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || PANES[name].def;
+
+function setRail(name, px) {
+  const spec = PANES[name];
+  const other = name === '--rail-l' ? '--rail-r' : '--rail-l';
+  // Leave the centre pane at least MID_MIN, accounting for both gutters.
+  const headroom = window.innerWidth - railWidth(other) - MID_MIN - 2 * 5;
+  const value = Math.round(Math.max(spec.min, Math.min(px, spec.max, Math.max(spec.min, headroom))));
+  document.documentElement.style.setProperty(name, value + 'px');
+  return value;
+}
+
+function savePanes() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      '--rail-l': railWidth('--rail-l'),
+      '--rail-r': railWidth('--rail-r'),
+    }));
+  } catch { /* private window, blocked storage: a forgotten width is harmless */ }
+}
+
+function restorePanes() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch { saved = null; }
+  if (!saved) return;
+  for (const name of Object.keys(PANES)) {
+    const value = Number(saved[name]);
+    if (Number.isFinite(value)) setRail(name, value);
+  }
+}
+
+function makeResizable(handleId, name, direction) {
+  const handle = $(handleId);
+  let startX = 0, startWidth = 0, pointer = null;
+
+  const onMove = (e) => {
+    if (pointer === null) return;
+    setRail(name, startWidth + direction * (e.clientX - startX));
+  };
+  const onUp = () => {
+    if (pointer === null) return;
+    pointer = null;
+    handle.classList.remove('live');
+    document.body.classList.remove('resizing');
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    savePanes();
+  };
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (window.innerWidth <= 1040) return;   // stacked layout: nothing to drag
+    e.preventDefault();
+    pointer = e.pointerId;
+    startX = e.clientX;
+    startWidth = railWidth(name);
+    handle.classList.add('live');
+    document.body.classList.add('resizing');
+    // Listen on the window, not the handle: the pointer routinely outruns a
+    // 5px target mid-drag, and capture alone still loses it over an iframe.
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp, { once:true });
+  });
+
+  handle.addEventListener('dblclick', () => { setRail(name, PANES[name].def); savePanes(); });
+
+  // Keyboard: a separator that can only be dragged is not usable by everyone.
+  handle.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 48 : 16;
+    if (e.key === 'ArrowLeft')       setRail(name, railWidth(name) - direction * step);
+    else if (e.key === 'ArrowRight') setRail(name, railWidth(name) + direction * step);
+    else if (e.key === 'Home' || e.key === 'Enter') setRail(name, PANES[name].def);
+    else return;
+    e.preventDefault();
+    savePanes();
+  });
+}
+
+restorePanes();
+makeResizable('split-l', '--rail-l', 1);   // dragging right widens the left pane
+makeResizable('split-r', '--rail-r', -1);  // dragging right narrows the right pane
+// Re-clamp on resize so a narrowed window cannot strand the centre pane.
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 1040) return;
+  setRail('--rail-l', railWidth('--rail-l'));
+  setRail('--rail-r', railWidth('--rail-r'));
+});
+
+/* one example per surface combination, so the gallery doubles as a map of what
+   the operator can reach */
+const TASKS = [
+  { tag:"fin", label:"Finance",
+    text:"The vendor invoices in the shared drive need processing - please take care of them.",
+    why:"Documents + browser ERP + internal API. Two clean invoices, three different exceptions." },
+  { tag:"it", label:"IT ops",
+    text:"Someone new is joining - there's a setup request in the HR inbox. Please get them set up.",
+    why:"Documents + desktop app. Needs an approval it cannot grant itself." },
+  { tag:"fin", label:"Finance",
+    text:"Reconcile PO-4490 and tell me whether we have been over-billed.",
+    why:"A narrow question. Should answer with figures, and change nothing." },
+  { tag:"it", label:"IT ops",
+    text:"What hardware and access does Rohan Iyer currently have? Flag anything unusual.",
+    why:"Read-only investigation across the desktop app and the IT API." },
+  { tag:"mix", label:"Both",
+    text:"Give me a short handover: what is sitting in both inboxes, and what needs a person?",
+    why:"Spans every surface. Triage without completing anything." },
+];
+
+const PHASES = {
+  'run.created':['run','Request received'],
+  'intake.started':['understand','Working out what this requires'],
+  'intake.completed':['understand','Understood the objective'],
+  'plan.created':['plan','Planned'],
+  'plan.revised':['replan','Revised the plan'],
+  'plan.continuing':['plan','Plan exhausted, continuing'],
+  'plan.steps_inserted':['adapt','Inserted recovery steps'],
+  'step.started':['execute','Acting'],
+  'step.observed':['observe','Observed'],
+  'step.retrying':['adapt','Retrying'],
+  'step.failed':['failed','Step failed'],
+  'step.skipped':['adapt','Step abandoned'],
+  'step.args_repaired':['adapt','Repaired arguments'],
+  'adapt.decided':['adapt','Decided how to recover'],
+  'loop.detected':['failed','Loop guard tripped'],
+  'policy.approval_required':['policy','Policy requires approval'],
+  'policy.denied':['failed','Blocked by policy'],
+  'human.requested':['human','Asked a person'],
+  'human.responded':['human','Person responded'],
+  'verification.started':['verify','Verifying against the systems'],
+  'verification.probe':['verify','Checked'],
+  'verification.completed':['verify','Verdict'],
+  'verification.remediation_started':['adapt','Verification failed, remediating'],
+  'budget.exceeded':['failed','Budget reached'],
+  'run.aborted':['failed','Aborted'],
+  'run.completed':['done','Finished'],
+  'run.failed':['failed','Run failed'],
+};
+
+const surfaceOf = (tool) => {
+  if (!tool) return '';
+  if (tool.startsWith('drive_')) return 'drive';
+  if (tool.startsWith('desktop_')) return 'desktop';
+  if (tool.startsWith('browser_') || tool === 'erp_login') return 'erp';
+  if (tool.startsWith('ledger') || tool.endsWith('_lookup')) return 'api';
+  if (tool.endsWith('_human')) return 'human';
+  return 'memory';
+};
+const TONE = { completed:'ok', met:'ok', succeeded:'ok', failed:'bad', aborted:'bad', unmet:'bad' };
+const badgeClass = (s) => `badge ${TONE[s] || (['partial','awaiting_human','unverifiable','pending','skipped','running','executing','planning','verifying','understanding','created'].includes(s) ? 'warn' : '')}`;
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clip = (s,n) => { s = String(s ?? ''); return s.length > n ? s.slice(0,n)+'…' : s; };
+const plural = (n,w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const ago = (ts) => {
+  const d = Math.max(0, Date.now()/1000 - ts);
+  if (d < 45) return 'just now';
+  if (d < 3600) return `${Math.floor(d/60)}m ago`;
+  if (d < 86400) return `${Math.floor(d/3600)}h ago`;
+  return `${Math.floor(d/86400)}d ago`;
+};
+/* Structured detail rows. `cells` is an array of arrays; each inner array is
+   [{cls, text}, ...]. Rendered as a CSS grid so a long value wraps inside its
+   own column instead of resetting to the left edge. */
+const rows = (cells) => {
+  if (!cells.length) return '';
+  const n = cells[0].length;
+  const body = cells.map((row) =>
+    row.map((c) => `<span class="${c.cls}">${esc(c.text)}</span>`).join('')).join('');
+  return `<div class="rows c${n}">${body}</div>`;
+};
+
+function describe(ev) {
+  const p = ev.payload || {};
+  switch (ev.type) {
+    case 'run.created': return { msg: esc(p.goal) };
+    case 'intake.completed': return {
+      msg: esc(p.objective),
+      rows: (p.acceptance_criteria||[]).map((c)=>[
+        {cls:'k',text:c.id}, {cls:'v',text:c.text},
+      ]),
+    };
+    case 'plan.created': case 'plan.revised': return {
+      msg: esc(clip(p.rationale, 240)),
+      rows: (p.steps||[]).map((s)=>[
+        {cls:'k',text:s.id}, {cls:'t',text:s.tool}, {cls:'v',text:s.intent},
+      ]),
+    };
+    case 'plan.continuing':
+      return { msg:`Cycle ${p.cycle} &middot; ${plural(p.steps_so_far,'step')} done, objective not yet complete.` };
+    case 'step.started':
+      return { msg: esc(p.intent || p.tool), tool:p.tool, attempt:p.attempt };
+    case 'step.observed': return {
+      msg: p.ok ? 'Succeeded' : `Failed &mdash; ${esc(p.error_kind)}`,
+      detail: clip(p.summary, 1500), ms:p.duration_ms, bad: !p.ok,
+    };
+    case 'step.retrying':
+      return { msg:`${esc(p.kind)} &mdash; retry ${p.attempt} in ${Number(p.after_seconds).toFixed(1)}s` };
+    case 'step.failed':
+      return { msg: esc(clip(p.error, 400)), detail: p.kind ? `failure kind: ${p.kind}` : '', bad:true };
+    case 'step.skipped':
+      return { msg: esc(p.reason || 'abandoned'), bad:true };
+    case 'step.args_repaired': return {
+      msg: esc(clip(p.reason, 300)),
+      rows: Object.entries(p.args||{}).map(([k,v])=>[
+        {cls:'k',text:k}, {cls:'v',text:typeof v === 'string' ? v : JSON.stringify(v)},
+      ]),
+    };
+    case 'plan.steps_inserted': return {
+      msg: `${plural((p.steps||[]).length,'step')} inserted to clear the blockage`,
+      rows: (p.steps||[]).map((s)=>[
+        {cls:'k',text:s.id}, {cls:'t',text:s.tool}, {cls:'v',text:s.intent},
+      ]),
+    };
+    case 'loop.detected': {
+      // Older runs recorded only the signature, so derive the tool from it.
+      const tool = p.tool || String(p.signature||'').split(':')[0] || 'the action';
+      const times = p.repeats ? ` ${p.repeats} times` : ' repeatedly';
+      return {
+        msg:`${esc(tool)} produced an identical result${times} &mdash; stopping it`,
+        detail: p.signature, bad:true,
+      };
+    }
+    case 'verification.remediation_started': return {
+      msg: `${plural((p.unmet||[]).length,'criterion').replace('criterions','criteria')} unmet &mdash; attempting remediation`,
+      detail: (p.remediation||[]).map((r)=>`• ${r}`).join('\n'),
+    };
+    case 'run.aborted': return { msg: esc(clip(p.reason, 400)), bad:true };
+    case 'intake.started': case 'verification.started': return { msg:'' };
+    case 'adapt.decided': return { msg:`&rarr; ${esc(p.action)}`, detail:p.reason };
+    case 'policy.approval_required':
+      return { msg:`${esc(p.tool)} &middot; risk ${esc(p.risk)}`, detail:p.reason };
+    case 'policy.denied': return { msg:esc(p.tool), detail:p.reason, bad:true };
+    case 'human.requested': return { msg:'Waiting for a person', detail:p.prompt };
+    case 'human.responded':
+      return { msg: p.approved ? 'Approved' : 'Answered', detail:p.response };
+    case 'verification.probe':
+      return { msg:`${esc(p.tool)} &middot; ${p.ok ? 'read' : 'not run'}`, tool:p.tool };
+    case 'verification.completed': return {
+      msg:`${p.complete ? 'Verified complete' : 'Not complete'} &middot; confidence ${Math.round((p.confidence||0)*100)}%`,
+      rows: (p.criteria||[]).map((c)=>[
+        {cls:`s ${c.status}`,text:c.status.toUpperCase()},
+        {cls:'k',text:c.id}, {cls:'v',text:c.note},
+      ]),
+      bad: !p.complete,
+    };
+    case 'run.completed': return { msg:`${esc(p.status)} &mdash; ${esc(p.headline)}` };
+    case 'run.failed': return { msg:esc(clip(p.error,600)), bad:true };
+    case 'budget.exceeded': return { msg:`Limit reached: ${esc(p.limit)}`, bad:true };
+    default: {
+      // Anything without a bespoke renderer still reads as key/value rows.
+      // Dumping raw JSON at a person is how the old build looked unfinished.
+      const entries = Object.entries(p || {});
+      if (!entries.length) return { msg:'' };
+      return {
+        msg:'',
+        rows: entries.map(([k,v])=>[
+          {cls:'k',text:k},
+          {cls:'v',text: typeof v === 'string' ? v : JSON.stringify(v)},
+        ]),
+      };
+    }
+  }
+}
+
+function addEvent(ev) {
+  if (ev.seq <= seenSeq) return;
+  seenSeq = ev.seq;
+  $('events-empty').style.display = 'none';
+  const [tone,label] = PHASES[ev.type] || ['', ev.type];
+  const b = describe(ev);
+  const el = document.createElement('div');
+  el.className = `ev p-${tone}`;
+  el.innerHTML =
+    `<div class="rail"><span class="pip"></span></div>` +
+    `<div class="body">` +
+      `<div class="head">` +
+        `<span class="phase">${esc(label)}</span>` +
+        (ev.step_id ? `<span class="sid">${esc(ev.step_id)}</span>` : '') +
+        (b.tool ? `<span class="surface">${esc(surfaceOf(b.tool))}</span>` : '') +
+        (b.attempt > 1 ? `<span class="sid">attempt ${b.attempt}</span>` : '') +
+        (b.ms !== undefined ? `<span class="ms">${b.ms}&thinsp;ms</span>` : '') +
+      `</div>` +
+      (b.msg ? `<div class="msg${b.bad ? ' bad' : ''}">${b.msg}</div>` : '') +
+      (b.rows && b.rows.length ? rows(b.rows) : '') +
+      (b.detail ? `<div class="detail">${esc(b.detail)}</div>` : '') +
+    `</div>`;
+  $('events').appendChild(el);
+  $('ev-count').textContent = seenSeq ? `${seenSeq} events` : '';
+  el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+}
+
+function renderPending(p) {
+  const box = $('pending');
+  if (!p) { box.innerHTML = ''; return; }
+  const approval = p.kind === 'approval';
+  box.innerHTML =
+    `<h2 class="sec" style="color:var(--warn)">The operator needs you</h2>` +
+    `<div class="card ask">` +
+      `<div class="q">${esc(p.prompt)}</div>` +
+      `<textarea id="answer" rows="3" placeholder="${approval ? 'Reason for your decision…' : 'Your answer…'}"></textarea>` +
+      `<div class="row">` +
+        (approval
+          ? `<button class="btn ok sm" id="yes">Approve</button><button class="btn bad sm" id="no">Decline</button>`
+          : `<button class="btn ok sm" id="send">Send answer</button>`) +
+      `</div>` +
+    `</div>`;
+  const submit = (approved) => {
+    const typed = $('answer').value.trim();
+    const response = typed || (approved === true ? 'approved' : approved === false ? 'declined' : '');
+    if (!response) { $('answer').focus(); return; }
+    box.querySelectorAll('button').forEach((b)=>b.disabled = true);
+    fetch(`/api/runs/${currentRun}/respond`, {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ response, approved }),
+    }).then(()=>{ box.innerHTML = ''; });
+  };
+  if (approval) { $('yes').onclick = ()=>submit(true); $('no').onclick = ()=>submit(false); }
+  else { $('send').onclick = ()=>submit(null); }
+}
+
+async function refresh() {
+  if (!currentRun) return;
+  const res = await fetch(`/api/runs/${currentRun}`);
+  if (!res.ok) return;
+  const { state, pending } = await res.json();
+
+  const busy = ['executing','planning','verifying','understanding','created'].includes(state.status);
+  $('c-status-t').textContent = state.status.replace(/_/g,' ');
+  const dot = $('c-status').querySelector('.dot');
+  dot.className = 'dot live' + (busy ? ' busy' : '');
+  dot.style.background =
+    state.status === 'completed' ? 'var(--ok)' :
+    ['failed','aborted'].includes(state.status) ? 'var(--bad)' :
+    ['partial','awaiting_human'].includes(state.status) ? 'var(--warn)' : 'var(--brand)';
+
+  const b = state.budget;
+  $('objective').innerHTML =
+    `<div class="objective">${esc(state.objective || state.goal)}</div>` +
+    `<div class="meter"><i style="width:${Math.min(100,(b.steps_used/b.max_steps)*100)}%"></i></div>` +
+    `<div class="stats">` +
+      `<div class="stat"><div class="v">${b.steps_used}/${b.max_steps}</div><div class="k">steps</div></div>` +
+      `<div class="stat"><div class="v">${b.llm_calls_used}</div><div class="k">model calls</div></div>` +
+      `<div class="stat"><div class="v">${b.plan_cycles_used ?? 0}</div><div class="k">plan cycles</div></div>` +
+      `<div class="stat"><div class="v">${b.replans_used}</div><div class="k">${b.replans_used === 1 ? 'replan' : 'replans'}</div></div>` +
+    `</div>`;
+
+  const crit = (state.verdict ? state.verdict.criteria : state.acceptance_criteria) || [];
+  $('crit-count').textContent = crit.length
+    ? `${crit.filter((c)=>c.status==='met').length}/${crit.length} met` : '';
+  $('criteria').innerHTML = crit.length
+    ? crit.map((c)=>
+        `<div class="crit"><span class="${badgeClass(c.status)}">${esc(c.status)}</span>` +
+        `<div><div class="txt">${esc(c.text)}</div>` +
+        (c.note ? `<div class="note">${esc(c.note)}</div>` : '') + `</div></div>`).join('')
+    : '<span class="muted">Fixed at intake, before any work starts.</span>';
+
+  const steps = state.plan.steps || [];
+  $('plan-count').textContent = steps.length
+    ? `${steps.filter((s)=>s.status==='succeeded').length}/${steps.length} done` : '';
+  $('plan').innerHTML = steps.length
+    ? steps.map((s)=>
+        `<div class="stepline"><span class="sid">${esc(s.id)}</span>` +
+        `<span class="what" title="${esc(s.intent||s.tool)}">${esc(s.intent||s.tool)}` +
+        `<span class="surface">${esc(surfaceOf(s.tool))}</span></span>` +
+        `<span class="${badgeClass(s.status)}">${esc(s.status)}</span></div>`).join('')
+    : '<span class="muted">&mdash;</span>';
+
+  const bundle = state.facts && state.facts.evidence_bundle;
+  const report = (state.facts && state.facts.report) || {};
+  $('evidence').innerHTML = bundle
+    ? (report.headline ? `<div style="font-size:var(--t-small);font-weight:600;line-height:1.5;margin-bottom:var(--s3)">${esc(report.headline)}</div>` : '')
+      + ((report.needs_attention||[]).length
+          ? `<div style="font-size:var(--t-micro);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--warn);margin-bottom:6px">Needs a person</div>`
+            + `<ul class="attention">` + report.needs_attention.map((x)=>`<li>${esc(x)}</li>`).join('') + `</ul>`
+          : '')
+      + `<div class="links">`
+      + `<a href="/api/runs/${currentRun}/artifact/REPORT.md" target="_blank">REPORT.md</a>`
+      + `<a href="/api/runs/${currentRun}/artifact/verification.md" target="_blank">verification.md</a>`
+      + `<a href="/api/runs/${currentRun}/artifact/events.jsonl" target="_blank">events.jsonl</a>`
+      + `</div>`
+    : '<span class="muted">Written when the run finishes.</span>';
+
+  renderPending(pending);
+  loadRuns();
+}
+
+async function loadRuns() {
+  const { runs } = await (await fetch('/api/runs')).json();
+  $('runs-count').textContent = runs.length ? String(runs.length) : '';
+  $('runs').innerHTML = runs.length
+    ? runs.map((r)=>
+        `<div class="run ${r.run_id===currentRun?'on':''}" data-id="${esc(r.run_id)}">` +
+        `<div><div class="goal" title="${esc(r.goal)}">${esc(clip(r.goal,46))}</div>` +
+        `<div class="when">${ago(r.updated_at)}</div></div>` +
+        `<span class="${badgeClass(r.status)}">${esc(r.status.replace(/_/g,' '))}</span></div>`).join('')
+    : '<span class="muted">No runs yet.</span>';
+  $('runs').querySelectorAll('.run').forEach((el)=>{ el.onclick = ()=>select(el.dataset.id); });
+}
+
+async function select(id) {
+  currentRun = id; seenSeq = 0;
+  $('events').innerHTML = '';
+  const { events } = await (await fetch(`/api/runs/${id}/events`)).json();
+  events.forEach(addEvent);
+  $('events-empty').style.display = events.length ? 'none' : 'flex';
+  refresh();
+}
+
+async function startRun() {
+  const goal = $('goal').value.trim();
+  if (!goal) { $('goal').focus(); return; }
+  $('start').disabled = true;
+  try {
+    const res = await fetch('/api/runs', {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ goal, token: ($('token') ? $('token').value.trim() : '') }),
+    });
+    if (!res.ok) {
+      const { detail } = await res.json().catch(()=>({detail:'Could not start the run.'}));
+      $('notice').innerHTML = `<div class="notice"><span>${esc(detail)}</span></div>`;
+      return;
+    }
+    const { run_id } = await res.json();
+    currentRun = run_id; seenSeq = 0;
+    $('events').innerHTML = '';
+    $('events-empty').style.display = 'none';
+    $('ev-count').textContent = '';
+  } finally { $('start').disabled = false; }
+}
+
+$('start').onclick = startRun;
+$('goal').addEventListener('keydown',(e)=>{
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); startRun(); }
+});
+
+$('reseed').onclick = async () => {
+  const btn = $('reseed'), was = btn.textContent;
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/sandbox/reset', { method:'POST' });
+    btn.textContent = r.ok ? 'Reset' : 'Unreachable';
+  } catch { btn.textContent = 'Unreachable'; }
+  setTimeout(()=>{ btn.textContent = was; btn.disabled = false; }, 1500);
+};
+
+$('tasks').innerHTML = TASKS.map((t,i)=>
+  `<button class="task" data-i="${i}">` +
+  `<span class="tag ${t.tag}">${esc(t.label)}</span>` +
+  `<div class="text">${esc(t.text)}</div>` +
+  `<div class="why">${esc(t.why)}</div></button>`).join('');
+$('tasks').querySelectorAll('.task').forEach((el)=>{
+  el.onclick = ()=>{ $('goal').value = TASKS[el.dataset.i].text; $('goal').focus(); };
+});
+
+const stream = new EventSource('/api/stream');
+stream.onmessage = (m) => {
+  const ev = JSON.parse(m.data);
+  if (!currentRun) currentRun = ev.run_id;
+  if (ev.run_id !== currentRun) { loadRuns(); return; }
+  addEvent(ev);
+  refresh();
+};
+
+fetch('/api/config').then((r)=>r.json()).then((c)=>{
+  const models = (c.provider.split('/')[1] || c.provider).split(',');
+  $('c-model').innerHTML = `<b>${esc(models[0])}</b>` +
+    (models.length > 1 ? ` +${models.length-1}` : '');
+  $('c-model').title = `Fallback chain: ${c.provider}`;
+  $('c-policy').innerHTML = `autonomy <b>${esc(c.policy.autonomy)}</b>`;
+  $('c-policy').title = `Approval gate: ${c.policy.approval_gate} · ${c.policy.rule_count} policy rules`;
+  $('c-tools').innerHTML = `<b>${c.tool_count}</b> tools · <b>${c.surfaces.length}</b> surfaces`;
+  $('c-tools').title = c.surfaces.join(', ');
+  applyCapabilities(c);
+});
+
+/* A deployed instance is not the same machine as a developer's laptop: it has no
+   Windows desktop to drive, and it must not let a visitor spend the owner's
+   model quota. Say both plainly in the UI rather than letting someone click a
+   button that can only fail. */
+function applyCapabilities(c) {
+  if (c.public_demo && !c.needs_token) {
+    $('start').disabled = true;
+    $('goal').disabled = true;
+    $('goal').placeholder = 'Starting runs is disabled on this public instance.';
+    $('notice').innerHTML =
+      `<div class="notice"><span><b>Read-only instance.</b> Browse the recorded runs below &mdash;
+       every decision, observation and evidence bundle is real. To run the operator yourself,
+       clone the repo and run it locally.</span></div>`;
+  } else if (c.public_demo && c.needs_token) {
+    const field = document.createElement('input');
+    field.id = 'token'; field.className = 'token'; field.type = 'password';
+    field.placeholder = 'Access code';
+    $('goal').after(field);
+    $('notice').innerHTML =
+      `<div class="notice"><span><b>Shared instance.</b> Runs spend a metered free-tier quota,
+       so starting one needs the access code.</span></div>`;
+  }
+
+  if (!c.desktop_available) {
+    document.querySelectorAll('.task').forEach((el) => {
+      if (TASKS[el.dataset.i].tag !== 'it') return;
+      el.classList.add('off');
+      el.disabled = true;
+      el.insertAdjacentHTML('beforeend',
+        '<div class="off-why">Needs the Windows desktop app &mdash; not available on this host.</div>');
+    });
+  }
+}
+loadRuns();
+</script>
+</body>
+</html>

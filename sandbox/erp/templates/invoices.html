@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Invoices - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Invoices</h1>
+<div class="card">
+  <form method="get" action="/invoices" class="row">
+    <div style="flex:1"><label for="q">Search by invoice number or vendor</label><input type="text" id="q" name="q" value="{{ q }}"></div>
+    <button type="submit">Search</button>
+  </form>
+  <p style="margin:14px 0 0"><a href="/invoices/new">Register a new invoice</a></p>
+</div>
+<table>
+  <thead><tr><th>Invoice</th><th>Vendor</th><th>PO</th><th>Status</th><th class="num">Amount</th><th>Approved by</th></tr></thead>
+  <tbody>
+  {% for inv in rows %}
+    <tr>
+      <td><a href="/invoices/{{ inv.id }}">{{ inv.number }}</a></td>
+      <td>{{ inv.vendor }}</td><td>{{ inv.po_number }}</td>
+      <td><span class="pill {{ inv.status }}">{{ inv.status }}</span></td>
+      <td class="num">{{ inv.amount|inr }}</td>
+      <td>{{ inv.approved_by or "-" }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6">No invoices matched.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

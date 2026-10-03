@@ -1,0 +1,109 @@
+# Policy configuration for the operator's PolicyGuard.
+#
+# This file is the operator's authority, expressed as data. Changing what the
+# agent may do unattended means editing this file, not the code -- and the
+# operator cannot edit it, because nothing in the tool catalog writes here.
+#
+# autonomy sets the baseline approval gate:
+#   supervised - a person approves anything that writes
+#   standard   - a person approves sensitive and external actions
+#   high       - a person approves only actions that leave the company
+#
+# Rule precedence: deny > require_approval > allow_without_approval > baseline.
+# A rule granting autonomy can therefore never override one demanding a human.
+autonomy: standard
+
+denied_tools: []
+
+rules:
+  # --- things that must stop for a person -----------------------------------
+  - id: FIN-002-controller-authority
+    match:
+      tools: [erp_login]
+      arg_equals: {name: account, value: finance_controller}
+    effect:
+      require_approval: true
+      risk: sensitive
+      reason: >
+        Acting on the Finance Controller account exceeds the operator's standing
+        authority. SOP FIN-002 section 6 requires explicit sign-off before an
+        approval is executed on that account.
+      cites: SOP FIN-002 section 6
+
+  - id: FIN-005-large-ledger-posting
+    match:
+      tools: [ledger_record]
+      arg: {name: amount, gte: 500000}
+    effect:
+      require_approval: true
+      risk: sensitive
+      reason: >
+        General ledger postings of INR 500,000 or more require Finance Controller
+        confirmation before they are recorded.
+      cites: SOP FIN-005
+
+  # --- things that are prohibited outright ----------------------------------
+  - id: FIN-004-unapproved-vendor
+    match:
+      tools: [ledger_record]
+      arg_not_in: {name: vendor, allow_from: vendors.approved}
+    effect:
+      deny: true
+      reason: >
+        Policy FIN-004 prohibits recording a ledger entry for a vendor that is not
+        in the approved vendor master. Escalate to Procurement instead.
+      cites: Policy FIN-004
+
+  # --- things the operator is trusted to do alone ---------------------------
+  # Without these, the baseline 'standard' gate would stop the operator at every
+  # sensitive action and it would not be autonomous in any useful sense.
+  - id: FIN-005-routine-ledger-posting
+    match:
+      tools: [ledger_record]
+      arg: {name: amount, lt: 500000}
+    effect:
+      allow_without_approval: true
+      reason: >
+        Posting an already-approved invoice below INR 500,000 to the general
+        ledger is routine bookkeeping. The approval decision was already made in
+        Nexus ERP, and the ledger endpoint is idempotent.
+      cites: SOP FIN-005
+
+  - id: FIN-002-recording-an-approval
+    match:
+      tools: [browser_click]
+      min_risk: sensitive
+    effect:
+      allow_without_approval: true
+      reason: >
+        Recording an approval in Nexus ERP is permitted once authority to act has
+        been established, because Nexus ERP independently enforces the per-account
+        approval limit and refuses anything beyond it.
+      cites: SOP FIN-002 section 6
+
+  - id: IT-001-routine-provisioning
+    match:
+      tools: [desktop_click]
+      min_risk: sensitive
+    effect:
+      allow_without_approval: true
+      reason: >
+        Creating an account, issuing the standard hardware kit and granting
+        unrestricted access groups are routine new-joiner provisioning. The Asset
+        and Access Manager enforces its own rules and refuses to grant a
+        restricted group from that screen at all, so the dangerous case cannot be
+        reached this way even by mistake - it has to come back as an approval
+        request instead.
+      cites: SOP IT-001
+
+data:
+  vendors:
+    approved:
+      - Northwind Components Pvt Ltd
+      - Helios Logistics
+      - Brightpath Consulting LLP
+      - Meridian Testing Labs
+  thresholds:
+    clerk_approval_limit_inr: 50000
+    controller_approval_limit_inr: 1000000
+    ledger_confirmation_inr: 500000

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Nexus ERP{% endblock %}</title>
+<style>
+  :root { --line:#d8dde5; --ink:#1b2330; --muted:#5c6b80; --accent:#1f4e9c; --bg:#f4f6f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 "Segoe UI",system-ui,sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:#132943; color:#fff; padding:10px 20px; display:flex; align-items:center; gap:24px; }
+  header .brand { font-weight:700; letter-spacing:.4px; }
+  header nav a { color:#cdd9ea; text-decoration:none; margin-right:16px; }
+  header nav a:hover { color:#fff; text-decoration:underline; }
+  header .who { margin-left:auto; font-size:13px; color:#aebfd6; }
+  main { max-width:1040px; margin:24px auto; padding:0 20px 60px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  h2 { font-size:15px; margin:24px 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px; margin-bottom:18px; }
+  table { width:100%; border-collapse:collapse; background:#fff; }
+  th,td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); }
+  th { background:#eef2f7; font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+  td.num,th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  a { color:var(--accent); }
+  .banner { padding:11px 14px; border-radius:5px; margin-bottom:16px; border:1px solid; }
+  .banner.error { background:#fdeaea; border-color:#e4a0a0; color:#8a1f1f; }
+  .banner.ok { background:#e9f6ec; border-color:#9fcfae; color:#1d6130; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600; }
+  .pill.registered { background:#e6effa; color:#1f4e9c; }
+  .pill.approved { background:#e3f5e8; color:#1d6130; }
+  .pill.on_hold { background:#fdf0e0; color:#8a5a12; }
+  label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin:12px 0 4px; }
+  input[type=text],input[type=password],textarea { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:4px; font:inherit; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:4px; padding:9px 18px; font:inherit; font-weight:600; cursor:pointer; }
+  button.secondary { background:#6b7585; }
+  .row { display:flex; gap:12px; align-items:flex-end; }
+  .stat { display:inline-block; min-width:150px; }
+  .stat b { display:block; font-size:26px; }
+  dl.kv { display:grid; grid-template-columns:230px 1fr; gap:6px 16px; margin:0; }
+  dl.kv dt { color:var(--muted); font-size:13px; }
+  dl.kv dd { margin:0; font-weight:600; }
+  form.inline { display:inline; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">NEXUS&nbsp;ERP</span>
+  {% if user %}
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/purchase-orders">Purchase Orders</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/vendors">Vendors</a>
+  </nav>
+  <span class="who">{{ user.name }} &middot; {{ user.role }} &middot; <a href="/logout" style="color:#cdd9ea">Sign out</a></span>
+  {% endif %}
+</header>
+<main>
+  {% if error %}<div class="banner error" role="alert">{{ error }}</div>{% endif %}
+  {% if notice %}<div class="banner ok" role="status">{{ notice }}</div>{% endif %}
+  {% block body %}{% endblock %}
+</main>
+</body>
+</html>

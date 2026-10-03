@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Dashboard</h1>
+<div class="card">
+  <span class="stat"><b>{{ counts.open_pos }}</b>Open purchase orders</span>
+  <span class="stat"><b>{{ counts.registered }}</b>Invoices registered</span>
+  <span class="stat"><b>{{ counts.approved }}</b>Invoices approved</span>
+  <span class="stat"><b>{{ counts.on_hold }}</b>Invoices on hold</span>
+</div>
+<h2>Quick actions</h2>
+<div class="card">
+  <a href="/invoices/new">Register a new invoice</a> &nbsp;|&nbsp;
+  <a href="/purchase-orders">Browse purchase orders</a> &nbsp;|&nbsp;
+  <a href="/invoices">Review invoices</a>
+</div>
+{% endblock %}

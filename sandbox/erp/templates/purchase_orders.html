@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Purchase Orders - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Purchase Orders</h1>
+<div class="card">
+  <form method="get" action="/purchase-orders" class="row">
+    <div style="flex:1"><label for="q">Search by PO number or vendor</label>
+    <input type="text" id="q" name="q" value="{{ q }}"></div>
+    <button type="submit">Search</button>
+  </form>
+</div>
+<table>
+  <thead><tr><th>PO Number</th><th>Vendor</th><th>Status</th><th class="num">Ordered</th><th class="num">Billed</th><th class="num">Remaining</th></tr></thead>
+  <tbody>
+  {% for po in rows %}
+    <tr>
+      <td><a href="/purchase-orders/{{ po.number }}">{{ po.number }}</a></td>
+      <td>{{ po.vendor }}</td>
+      <td>{{ po.status }}</td>
+      <td class="num">{{ po.total|inr }}</td>
+      <td class="num">{{ po.billed|inr }}</td>
+      <td class="num">{{ po.remaining|inr }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6">No purchase orders matched.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

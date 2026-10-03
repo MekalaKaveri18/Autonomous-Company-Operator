@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Vendors - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Approved Vendor Master</h1>
+<p style="color:var(--muted)">Only vendors listed here are approved for payment.</p>
+<div class="card">
+  <form method="get" action="/vendors" class="row">
+    <div style="flex:1"><label for="q">Search vendor name</label><input type="text" id="q" name="q" value="{{ q }}"></div>
+    <button type="submit">Search</button>
+  </form>
+</div>
+<table>
+  <thead><tr><th>Vendor ID</th><th>Name</th><th>Approved</th><th>Payment terms</th><th>GSTIN</th></tr></thead>
+  <tbody>
+  {% for v in rows %}
+    <tr><td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ "yes" if v.approved else "no" }}</td><td>{{ v.payment_terms }}</td><td>{{ v.tax_id }}</td></tr>
+  {% else %}
+    <tr><td colspan="5">No vendor in the approved master matched this search.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

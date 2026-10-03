@@ -1,0 +1,37 @@
+company:
+  legal_name: CentrAlign Manufacturing India Pvt Ltd
+  short_name: CentrAlign
+  entity_type: Private Limited, India
+  base_currency: INR
+  finance_calendar: April-March
+  locations:
+    - Pune (Hinjewadi Phase II) - head office and plant
+
+people:
+  finance_controller: Sanjay Menon
+  accounts_payable_clerk: Ananya Rao
+  procurement_lead: Divya Krishnan
+
+systems:
+  nexus_erp:
+    purpose: Purchase order master, invoice register and approvals. System of record for procurement.
+    access: browser, sign-in required
+    notes: Approval authority is enforced per account. The clerk account cannot approve at or above INR 50,000.
+  financeops_api:
+    purpose: Approved vendor master, GL code mapping, and the general ledger.
+    access: internal JSON API, no authentication inside the network
+    notes: The ledger write is idempotent on invoice number, so retrying after a failure is safe.
+  shared_drive:
+    purpose: Where vendor documents arrive and are filed.
+    folders:
+      invoices-inbox: unprocessed vendor documents
+      invoices-processed: invoices approved and posted to the ledger
+      invoices-exceptions: anything held, duplicated, or not actionable
+
+conventions:
+  amounts: Stated in INR without decimals. Invoice PDFs write amounts with thousands separators.
+  purchase_order_format: PO-nnnn
+  invoice_numbers: Vendor-assigned, format varies by vendor. Treat as opaque identifiers.
+  working_assumption: >
+    If an instruction is short, the governing SOP supplies the missing steps. Check
+    company memory for the relevant SOP before deciding how to do something.

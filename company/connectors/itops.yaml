@@ -1,0 +1,77 @@
+# IT Operations connector -- READ ONLY, on purpose.
+#
+# A second connector added with no Python written, which is the point: the
+# operator learned an entire additional internal system from this file alone.
+#
+# Note what is absent. There is no create-account or assign-asset operation,
+# because the Asset and Access Manager has no write API -- those changes have to
+# be made in the desktop application. Declaring only what genuinely exists
+# matters: a connector that advertised a write endpoint the service does not have
+# would send the planner down a path that can only 404.
+#
+# Because every operation here is read-only, the verifier may use all of them,
+# which is how an onboarding run gets checked against something other than the
+# agent's own account of what it did.
+name: itops
+surface: itops
+base_url_setting: api_url
+
+operations:
+  - name: account_lookup
+    method: GET
+    path: /itops/accounts
+    description: >
+      Look up a user account in the IT directory by username, or list every
+      account when no username is given. Use this to check whether an account
+      already exists before creating one, and to confirm afterwards that it was
+      actually created. A username that does not exist returns not_found.
+    args:
+      username:
+        type: string
+        description: Username to look up, e.g. p.venkatesan. Omit to list all accounts.
+    required: []
+    query:
+      username: {arg: username}
+    risk: read
+    preview: "Look up IT account {username}"
+    on_failure_hint: >
+      not_found means the account genuinely does not exist. Create it in the
+      Asset and Access Manager desktop application; there is no API for writes.
+
+  - name: asset_lookup
+    method: GET
+    path: /itops/assets
+    description: >
+      List hardware assets, optionally filtered by who holds them or by status
+      (available, assigned, in_repair). Use this to find a free laptop or monitor
+      before assigning one, and to confirm an assignment afterwards.
+    args:
+      assigned_to:
+        type: string
+        description: Username whose assets to list. Omit for all.
+      status:
+        type: string
+        description: Filter by status - available, assigned or in_repair.
+    required: []
+    query:
+      assigned_to: {arg: assigned_to}
+      status: {arg: status}
+    risk: read
+    preview: "List IT assets (assigned_to={assigned_to}, status={status})"
+
+  - name: access_group_lookup
+    method: GET
+    path: /itops/access-groups
+    description: >
+      List access groups with their descriptions, whether they are restricted,
+      and their current members. Optionally filter to the groups one person
+      belongs to. Restricted groups cannot be granted without approval.
+    args:
+      member:
+        type: string
+        description: Username whose group memberships to list. Omit for all groups.
+    required: []
+    query:
+      member: {arg: member}
+    risk: read
+    preview: "List access groups (member={member})"

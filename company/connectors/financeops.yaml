@@ -1,0 +1,112 @@
+# FinanceOps API connector.
+#
+# This file alone teaches the operator a new internal system. Each operation
+# below becomes a tool in the planner's catalog at start-up, with no Python
+# written and no change to the kernel. To connect a different service, copy this
+# file and describe its endpoints.
+#
+# Fields:
+#   base_url_setting  name of the Settings attribute holding the service root
+#   args / required   JSON Schema properties the planner must satisfy
+#   query             query parameters, mapped from args
+#   body              args forwarded as the JSON request body
+#   risk              read | write | sensitive | external (the policy engine
+#                     may escalate further based on the actual arguments)
+#   status_map        HTTP status -> this system's failure taxonomy, which is
+#                     what lets the adapt phase retry a 503 but replan a 404
+name: financeops
+surface: financeops
+base_url_setting: api_url
+
+operations:
+  - name: vendor_lookup
+    method: GET
+    path: /vendors
+    description: >
+      Look up a vendor in the approved vendor master by name. Returns the vendor
+      record with its approval status, payment terms, tax id and spend category.
+      A vendor that is absent from the master returns not_found, which means the
+      vendor is not approved for payment - a finding, not a system error.
+    args:
+      name:
+        type: string
+        description: Vendor name as written on the invoice. Partial names match.
+    required: [name]
+    query:
+      name: {arg: name}
+    risk: read
+    preview: "Look up vendor {name} in the approved vendor master"
+    on_failure_hint: >
+      If the vendor is not found it is genuinely not approved. Do not retry with
+      variations; treat it as an exception under policy FIN-004.
+
+  - name: gl_code_lookup
+    method: GET
+    path: /gl-codes
+    description: >
+      Get the general ledger code for a spend category. Categories come from the
+      purchase order, for example components, logistics, professional_services,
+      lab_services, office_supplies.
+    args:
+      category:
+        type: string
+        description: Spend category of the purchase order.
+    required: [category]
+    query:
+      category: {arg: category}
+    risk: read
+    preview: "Look up the GL code for category {category}"
+    on_failure_hint: >
+      The error body lists the known categories. Pick the matching one rather
+      than inventing a code.
+
+  - name: ledger_record
+    method: POST
+    path: /ledger/entries
+    description: >
+      Record an approved invoice in the general ledger. Call this only after the
+      invoice has actually been approved in Nexus ERP. Idempotent on invoice
+      number, so a retry after a failure will not create a duplicate entry.
+    args:
+      invoice_number:
+        type: string
+        description: Invoice number exactly as registered in Nexus ERP.
+      vendor:
+        type: string
+        description: Vendor name.
+      po_number:
+        type: string
+        description: Purchase order the invoice was matched to.
+      amount:
+        type: number
+        description: Invoice total as a number, without separators.
+      currency:
+        type: string
+        description: Currency code, normally INR.
+      gl_code:
+        type: string
+        description: GL code from gl_code_lookup.
+      memo:
+        type: string
+        description: Short note recording what was matched and approved.
+    required: [invoice_number, vendor, amount, gl_code]
+    body: [invoice_number, vendor, po_number, amount, currency, gl_code, memo]
+    success_codes: [200, 201]
+    risk: sensitive
+    reversible: false
+    idempotent: true
+    preview: "Post {invoice_number} ({vendor}, {amount}) to the general ledger"
+    on_failure_hint: >
+      A 422 lists the missing or invalid fields. A 503 is transient and should be
+      retried; the endpoint is idempotent so a retry is safe.
+
+  - name: ledger_list
+    method: GET
+    path: /ledger/entries
+    description: >
+      List all general ledger entries. Use this to verify that an invoice was
+      actually posted, rather than assuming the write succeeded.
+    args: {}
+    required: []
+    risk: read
+    preview: "List general ledger entries"

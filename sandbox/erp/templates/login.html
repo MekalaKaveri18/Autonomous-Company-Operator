@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign in - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Sign in to Nexus ERP</h1>
+<p style="color:var(--muted)">Finance and procurement system of record.</p>
+<div class="card" style="max-width:380px">
+  <form method="post" action="/login">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" required>
+    <div style="margin-top:18px"><button type="submit">Sign in</button></div>
+  </form>
+</div>
+{% endblock %}

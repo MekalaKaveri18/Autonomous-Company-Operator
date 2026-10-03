@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Register invoice - Nexus ERP{% endblock %}
+{% block body %}
+<h1>Register a new invoice</h1>
+<p style="color:var(--muted)">The invoice must reference an existing purchase order.</p>
+<div class="card" style="max-width:560px">
+  <form method="post" action="/invoices">
+    <label for="number">Invoice number</label>
+    <input type="text" id="number" name="number" required>
+    <label for="vendor">Vendor name</label>
+    <input type="text" id="vendor" name="vendor" required>
+    <label for="po_number">Purchase order number</label>
+    <input type="text" id="po_number" name="po_number" required>
+    <label for="amount">Invoice amount</label>
+    <input type="text" id="amount" name="amount" required>
+    <label for="invoice_date">Invoice date</label>
+    <input type="text" id="invoice_date" name="invoice_date" placeholder="YYYY-MM-DD">
+    <label for="gl_code">GL code</label>
+    <input type="text" id="gl_code" name="gl_code">
+    <div style="margin-top:20px"><button type="submit">Register invoice</button></div>
+  </form>
+</div>
+{% endblock %}
