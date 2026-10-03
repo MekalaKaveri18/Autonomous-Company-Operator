@@ -47,6 +47,9 @@ header .wrap{display:flex;align-items:center;gap:var(--s3);height:58px;}
 .mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;
   background:linear-gradient(140deg,var(--brand),var(--violet));color:#fff;font-weight:800;font-size:14px;}
 .hname{font-weight:650;letter-spacing:-.01em;font-size:15px;}
+.navcta{display:inline-flex;align-items:center;height:30px;padding:0 13px;border-radius:99px;
+  background:var(--brand);color:#fff !important;font-weight:600;font-size:13px;}
+.navcta:hover{filter:brightness(1.1);}
 header nav{margin-left:auto;display:flex;gap:var(--s5);font-size:14px;}
 header nav a{color:var(--ink-2);text-decoration:none;}
 header nav a:hover{color:var(--ink);}
@@ -141,6 +144,7 @@ footer a{color:var(--ink-2);}
     <a href="#decisions">Decisions</a>
     <a href="#limits">Limits</a>
     <a href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">GitHub</a>
+    <a class="navcta" href="/operator">Open the operator &rarr;</a>
   </nav>
 </div></header>
 
@@ -156,17 +160,18 @@ footer a{color:var(--ink-2);}
       desktop application driven through UI Automation.
     </p>
     <div class="cta">
-      <a class="btn" href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">View the source</a>
+      <a class="btn" href="/operator">Open the live operator</a>
+      <a class="btn ghost" href="https://github.com/MekalaKaveri18/Autonomous-Company-Operator">View the source</a>
       <a class="btn ghost" href="#evidence">See a real run</a>
     </div>
 
     <div class="callout">
-      <span class="ic">⚠︎</span>
-      <p><b>This page is a showcase, not the running operator.</b> The operator drives a real
-      Chromium instance and a real desktop window, and a run takes minutes — none of which fits a
-      serverless host. Everything below is taken from genuine runs: the figures, the verdicts and
-      the screenshots are real output, not mockups. To watch it work, clone the repo and run it
-      locally, or deploy the included Docker image.</p>
+      <span class="ic">▶</span>
+      <p><b>The operator is running at <a href="/operator">/operator</a>.</b> It drives a real
+      Chromium instance against a mock ERP, reads real PDFs and calls real internal APIs — the
+      finance task family runs end to end. The IT family needs a Windows desktop session, so on
+      this Linux host those tools are not offered at all. Everything below is taken from genuine
+      runs: the figures, verdicts and screenshots are real output, not mockups.</p>
     </div>
   </div>
 

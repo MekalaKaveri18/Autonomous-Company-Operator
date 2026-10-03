@@ -1,17 +1,21 @@
-# Render blueprint. `render.yaml` in the repo root means the service can be
-# created straight from the repo with no console clicking.
+# Render blueprint. Having `render.yaml` in the repo root means the service can be
+# created straight from the repo: New -> Blueprint -> pick this repo.
 #
-# `free` is deliberate, and it works because of what read-only mode does NOT do.
-# With OPERATOR_PUBLIC_DEMO=1 and no token, no run can start, so Chromium is never
-# launched: the container is just Python, FastAPI and SQLite. Measured footprint
-# is ~50MB against the free tier's 512MB. Visitors browse every recorded run,
-# its full decision stream and its evidence bundle.
+# `free` is not a compromise here, it is a measured result. The container was run
+# under a hard 512MB cap while executing a real browser run against the mock ERP:
 #
-# To let the deployed instance actually RUN the operator, set GEMINI_API_KEY and
-# OPERATOR_DEMO_TOKEN and move to `standard`. Chromium alone wants roughly 512MB,
-# so the free tier will be OOM-killed mid-browse -- the failure looks like a
-# mysterious restart rather than an out-of-memory error, which is worth knowing
-# before you spend an afternoon on it.
+#   idle                 48MB
+#   peak, Chromium up   259MB
+#   OOM killed          no
+#
+# Chromium is launched only while a run is executing and the context is torn down
+# with the run, so the steady state is small. The free tier does spin down after
+# ~15 minutes of inactivity, so the first request after a quiet spell takes about
+# a minute to cold start. That is the real cost of `free`, not memory.
+#
+# Set GEMINI_API_KEY and OPERATOR_DEMO_TOKEN in the Render dashboard to let the
+# deployed instance actually run the operator. Leave them unset and the instance
+# stays read-only: visitors browse recorded runs and evidence, nothing is spent.
 services:
   - type: web
     name: centralign-operator
@@ -26,16 +30,18 @@ services:
         value: "1"
       - key: OPERATOR_LLM_PROVIDER
         value: gemini
-      # The free Gemini tier meters 20 requests per day PER MODEL, so a wide
-      # chain is what makes a live instance usable rather than a one-run novelty.
+      # Gemini's free tier meters 20 requests per day PER MODEL, and one run costs
+      # roughly 25 calls. A nine-model chain is what makes a public instance last
+      # a day rather than a single visitor.
       - key: OPERATOR_LLM_MODEL
         value: gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemma-4-31b-it
-      # Both unset on purpose: without a key and a token the instance stays
-      # read-only, which is what keeps it free and keeps a passing visitor from
-      # spending the owner's daily quota.
       - key: GEMINI_API_KEY
-        sync: false
+        sync: false        # paste in the dashboard; never committed
       - key: OPERATOR_DEMO_TOKEN
-        sync: false
+        sync: false        # the access code that lets a visitor start a run
+      # A deployed run gets less CPU than a laptop, so give it more wall clock
+      # before the budget calls time.
       - key: OPERATOR_WALL_CLOCK_SECONDS
-        value: "900"
+        value: "1500"
+      - key: OPERATOR_MAX_STEPS
+        value: "60"

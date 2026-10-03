@@ -22,3 +22,5 @@ sandbox/drive/invoices-exceptions/*
 sandbox/drive/hr-inbox/*
 sandbox/drive/hr-completed/*
 sandbox/drive/hr-processed/*
+
+.vercel

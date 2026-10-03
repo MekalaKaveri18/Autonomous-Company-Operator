@@ -21,6 +21,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ..bootstrap import Operator, build_operator
@@ -28,6 +29,10 @@ from ..runtime.kernel import desktop_surface_available
 from ..runtime.state import RunState
 
 STATIC = Path(__file__).parent / "static"
+#: The showcase site lives at the repo root so it can also be published as a
+#: plain static bundle. A deployed operator serves it as its landing page, so
+#: one URL carries both the explanation and the running thing.
+SITE = Path(__file__).resolve().parents[3] / "site"
 
 
 class StartRequest(BaseModel):
@@ -116,15 +121,25 @@ def create_app() -> FastAPI:
     app = FastAPI(title="CentrAlign operator", docs_url=None, redoc_url=None)
     manager = RunManager()
 
+    _NO_CACHE = {"Cache-Control": "no-store, must-revalidate"}
+
     @app.get("/")
-    async def index() -> FileResponse:
+    async def landing() -> FileResponse:
+        """The showcase page, or the operator itself if the site is absent."""
+        page = SITE / "index.html"
+        if not page.exists():
+            return FileResponse(STATIC / "index.html", headers=_NO_CACHE)
+        return FileResponse(page, headers=_NO_CACHE)
+
+    @app.get("/operator")
+    async def operator_console() -> FileResponse:
         # Never cache the shell. The dashboard is edited and reloaded constantly,
         # and a browser quietly serving yesterday's copy during a demo looks
         # exactly like a bug in the agent.
-        return FileResponse(
-            STATIC / "index.html",
-            headers={"Cache-Control": "no-store, must-revalidate"},
-        )
+        return FileResponse(STATIC / "index.html", headers=_NO_CACHE)
+
+    if (SITE / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=str(SITE / "assets")), name="assets")
 
     @app.get("/api/config")
     async def config() -> dict[str, Any]:

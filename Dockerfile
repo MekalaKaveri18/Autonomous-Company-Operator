@@ -28,6 +28,8 @@ RUN pip install --no-cache-dir -e "."  && pip install --no-cache-dir "playwright
 COPY sandbox/ ./sandbox/
 COPY company/ ./company/
 COPY scripts/ ./scripts/
+# The showcase page is served as the landing page by the operator itself.
+COPY site/ ./site/
 
 # var/ holds the event log, snapshots and the sandbox world; artifacts/ holds
 # evidence bundles. Both are written at runtime.
