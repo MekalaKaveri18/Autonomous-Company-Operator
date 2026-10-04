@@ -361,5 +361,21 @@ footer a{color:var(--ink-2);}
   </footer>
 
 </div>
+<script>
+/* This page is served from two places: by the operator itself (where /operator
+   is a real route), and as a static mirror on a host that has no operator behind
+   it. Rewriting the links at load time keeps one source of truth for the page
+   instead of two near-identical copies drifting apart. */
+(function () {
+  var OPERATOR = "https://centralign-operator.onrender.com";
+  if (location.hostname === new URL(OPERATOR).hostname) return;   // already there
+  document.querySelectorAll('a[href^="/operator"]').forEach(function (a) {
+    a.href = OPERATOR + a.getAttribute("href");
+  });
+  document.querySelectorAll('a[href^="/assets"]').forEach(function (a) {
+    /* assets are mirrored alongside this page, so leave them relative */
+  });
+})();
+</script>
 </body>
 </html>

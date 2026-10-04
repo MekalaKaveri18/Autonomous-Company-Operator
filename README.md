@@ -63,6 +63,20 @@ its code.
 
 ## Demo
 
+**Live:** <https://centralign-operator.onrender.com> — the showcase at `/`, the
+running operator at `/operator`.
+
+Starting a run needs the access code, because Gemini's free tier meters 20 calls
+per day *per model* and one run costs roughly 25 of them; browsing every recorded
+run, its full decision stream and its evidence bundle is open to everyone. The
+instance sleeps after ~15 minutes idle, so a cold first request takes about a
+minute.
+
+Note what the live instance does **not** offer: UI Automation is a Windows API,
+so the deployed Linux host reports 20 tools across 6 surfaces rather than 24
+across 7, and the IT onboarding examples are marked unavailable. The operator
+presents the surfaces it genuinely has.
+
 **Video:** _<add link>_
 
 ### Task family 1 — accounts payable (drive → ERP → ledger)
