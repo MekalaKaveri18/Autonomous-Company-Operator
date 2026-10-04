@@ -24,7 +24,9 @@ operations:
       Look up a user account in the IT directory by username, or list every
       account when no username is given. Use this to check whether an account
       already exists before creating one, and to confirm afterwards that it was
-      actually created. A username that does not exist returns not_found.
+      actually created. If the username does not exist this SUCCEEDS and returns
+      an account_not_found body - that is the answer to "is this name free?",
+      not an error, so read the response rather than treating it as a failure.
     args:
       username:
         type: string
@@ -32,11 +34,14 @@ operations:
     required: []
     query:
       username: {arg: username}
+    # 404 is a successful outcome here. The primary use of this operation is to
+    # check that a username is FREE before creating it, so "no such account" is
+    # the result the caller wanted. Classifying it as a failure sent the operator
+    # into an adapt-and-repair cycle over an answer it had already received, and
+    # three of those exhausted the consecutive-failure budget.
+    success_codes: [200, 404]
     risk: read
     preview: "Look up IT account {username}"
-    on_failure_hint: >
-      not_found means the account genuinely does not exist. Create it in the
-      Asset and Access Manager desktop application; there is no API for writes.
 
   - name: asset_lookup
     method: GET

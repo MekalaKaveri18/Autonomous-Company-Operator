@@ -65,6 +65,11 @@ MAX_VERIFY_ROUNDS = 2
 #: Identical successful actions before we call it thrashing.
 MAX_REPEATED_ACTIONS = 3
 
+#: Failure kinds that report a fact about the world rather than a fault in it.
+#: From a read-only tool these are answers, and answers should not count toward
+#: the consecutive-failure budget.
+_INFORMATIONAL = {"not_found", "conflict"}
+
 
 class _Paused(Exception):
     """Internal signal: the run is suspended awaiting a person."""
@@ -91,11 +96,11 @@ class Kernel:
         self.company_name = company_name
         self._ctx: ToolContext | None = None
         self._action_counts: dict[str, int] = {}
-        #: Action signatures already shown to be stuck. Detection is
-        #: necessarily after the fact -- we only know an action made no
-        #: progress once we have seen its result -- so remembering them
-        #: stops the *next* identical attempt before it costs anything.
-        self._looping: set[str] = set()
+        #: Action signatures already shown to make no progress, mapped to the
+        #: result they kept producing. Detection is necessarily after the fact --
+        #: we only know an action changed nothing once we have seen its result --
+        #: so remembering them short-circuits the *next* identical attempt.
+        self._looping: dict[str, Observation] = {}
         self._verification_evidence: str = ""
 
     # -- public API ---------------------------------------------------------
@@ -528,7 +533,23 @@ class Kernel:
 
         # 3. execute
         signature = f"{tool.name}:{json.dumps(args, sort_keys=True, default=str)[:300]}"
-        if signature in self._looping:
+        remembered = self._looping.get(signature)
+        if remembered is not None:
+            if remembered.ok:
+                # It succeeded before and changes nothing when repeated -- a tab
+                # already open, a file already filed. The step's intent is
+                # satisfied, so satisfy it from the previous result rather than
+                # doing it again.
+                step.status = StepStatus.SUCCEEDED
+                step.observation = remembered
+                step.ended_at = time.time()
+                self._emit(
+                    state,
+                    "step.already_satisfied",
+                    {"tool": tool.name, "detail": "repeating this would change nothing"},
+                    step_id=step.id,
+                )
+                return
             self._fail_step(
                 state,
                 step,
@@ -590,19 +611,36 @@ class Kernel:
         ).hexdigest()
         self._action_counts[outcome] = self._action_counts.get(outcome, 0) + 1
         if self._action_counts[outcome] > MAX_REPEATED_ACTIONS:
+            self._looping[signature] = observation
+            self._emit(
+                state,
+                "loop.detected",
+                {
+                    "tool": tool.name,
+                    "repeats": self._action_counts[outcome],
+                    "benign": observation.ok,
+                    "signature": signature[:200],
+                },
+                step_id=step.id,
+            )
+            if observation.ok:
+                # Benign repetition: the action keeps working and keeps leaving
+                # the world as the plan wants it. Failing the step here was a
+                # false positive that cascaded -- dependents were abandoned, the
+                # consecutive-failure budget tripped, and a healthy run died at
+                # 82 seconds because it clicked an already-open tab four times.
+                step.status = StepStatus.SUCCEEDED
+                state.budget.consecutive_failures = 0
+                state.note(
+                    f"{tool.name} repeats without changing anything; treating it as already done."
+                )
+                return
             self._fail_step(
                 state,
                 step,
                 f"{tool.name} has now produced an identical result "
                 f"{self._action_counts[outcome]} times without advancing the objective",
                 kind="internal",
-            )
-            self._looping.add(signature)
-            self._emit(
-                state,
-                "loop.detected",
-                {"tool": tool.name, "repeats": self._action_counts[outcome], "signature": signature[:200]},
-                step_id=step.id,
             )
             state.note(f"Loop guard stopped a repeating action ({tool.name}).")
             return
@@ -612,8 +650,13 @@ class Kernel:
             state.budget.consecutive_failures = 0
             return
 
-        state.budget.consecutive_failures += 1
         step.status = StepStatus.FAILED
+        # "It is not there" from a read-only lookup is an answer, not a
+        # malfunction. The step still fails so the adapt phase can decide what to
+        # do, but it must not push the run toward the abort threshold -- three
+        # informative misses are not a system falling over.
+        if not (observation.error_kind in _INFORMATIONAL and tool.risk is RiskTier.READ):
+            state.budget.consecutive_failures += 1
 
         # 5. cheap recovery first, model only when it is actually needed.
         #

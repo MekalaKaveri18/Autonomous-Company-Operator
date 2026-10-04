@@ -77,21 +77,6 @@ so the deployed Linux host reports 20 tools across 6 surfaces rather than 24
 across 7, and the IT onboarding examples are marked unavailable. The operator
 presents the surfaces it genuinely has.
 
-
-Two recordings, both of genuine runs rather than staged walkthroughs:
-
-| | What it shows | How it was made |
-| --- | --- | --- |
-| **Finance** | The full invoice cycle, including the operator catching the over-billed invoice, citing SOP FIN-007, escalating with the figures worked out, and stopping for a person | `python scripts/record_demo.py --task finance` |
-| **IT onboarding** | The operator driving the Asset &amp; Access Manager desktop application, and the restricted group it is refused and must escalate | `python scripts/record_demo.py --task it` and `python scripts/record_desktop_clip.py` |
-
-Both scripts drive the real system and film it; nothing is scripted for the
-camera, so a failure or a recovery appears exactly as it happened. The dashboard
-recording uses Playwright's bundled ffmpeg, so there is no screen-recorder to
-install. The desktop clip is assembled from the screenshots the operator took of
-itself at the moment it acted — Playwright films a browser, and the Qt window
-lives outside one.
-
 ### Task family 1 — accounts payable (drive → ERP → ledger)
 
 What to watch for, in order:

@@ -548,6 +548,53 @@ class TestTermination:
             f"kept going after detecting a loop: {len(identical)} identical calls"
         )
 
+    async def test_benign_repetition_does_not_kill_the_run(
+        self, make_kernel, tools, event_types
+    ):
+        """A harmless repeat must not cascade into a dead run.
+
+        This is a real failure, not a hypothetical. A live onboarding run clicked
+        an already-open tab four times; each click succeeded and left the world
+        exactly as the plan wanted it. The guard failed the step anyway, its
+        dependents were abandoned, the consecutive-failure budget tripped, and a
+        healthy run died after 82 seconds. Repetition that keeps succeeding means
+        the work is already done, not that the operator is stuck.
+        """
+        repeated = [step("fake_read", id=f"s{i}", args={"note": "same"}) for i in range(1, 7)]
+        kernel, _ = make_kernel(
+            [
+                intake(),
+                plan(*repeated, step("fake_write", id="after", depends_on=["s6"])),
+                probes({"tool": "fake_read"}),
+                verdict(("ac1", "met")),
+                report(),
+            ]
+        )
+        state = await kernel.start("go")
+
+        types = event_types(kernel, state.run_id)
+        assert "loop.detected" in types, "the repetition should still be noticed"
+        assert "budget.exceeded" not in types, "a benign repeat must not exhaust the budget"
+        assert tools["fake_write"].calls == [{}], "dependent work must still run"
+        assert state.status is RunStatus.COMPLETED
+        assert not [s.id for s in state.plan.steps if s.status is StepStatus.FAILED]
+
+    async def test_a_repeating_failure_still_stops_the_run(self, make_kernel, event_types):
+        """The guard must keep its teeth for the case it was built for."""
+        repeated = [step("fake_missing", id=f"m{i}") for i in range(1, 7)]
+        kernel, _ = make_kernel(
+            [
+                intake(),
+                plan(*repeated),
+                *[adapt("retry") for _ in range(6)],
+                probes({"tool": "fake_read"}),
+                verdict(("ac1", "unmet"), complete=False),
+                report(),
+            ]
+        )
+        state = await kernel.start("go")
+        assert state.status is not RunStatus.COMPLETED
+
     async def test_the_step_budget_terminates_a_long_plan(self, make_kernel, settings, event_types):
         import dataclasses
 
