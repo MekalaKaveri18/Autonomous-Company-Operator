@@ -1,0 +1,29 @@
+#!/bin/sh
+# Refuse to commit a real secret into a tracked file.
+#
+# This exists because the mistake was made twice: the API key belongs in .env,
+# which is gitignored, but it is easy to paste into .env.example, which is not.
+# GitHub's push protection caught it both times -- after the commit existed, which
+# then needed amending. Catching it here costs nothing and keeps history clean.
+#
+# Install once:  git config core.hooksPath .githooks
+
+fail() { printf '\n  BLOCKED: %s\n\n' "$1" >&2; exit 1; }
+
+# Any staged file carrying a populated key assignment.
+for file in $(git diff --cached --name-only --diff-filter=ACM); do
+  case "$file" in
+    *.example|*.sample|*.template|*.md) ;;   # templates must stay empty
+    *) continue ;;
+  esac
+  if git show ":$file" 2>/dev/null | grep -qE '^[A-Z_]*(API_KEY|TOKEN|SECRET|PASSWORD)=[A-Za-z0-9_.-]{12,}'; then
+    fail "$file has a populated secret. Templates must ship an empty value; put the real one in .env (gitignored)."
+  fi
+done
+
+# .env itself must never be staged, whatever .gitignore says.
+if git diff --cached --name-only | grep -qx '.env'; then
+  fail ".env is staged. It holds real credentials and must stay untracked."
+fi
+
+exit 0

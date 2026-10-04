@@ -374,7 +374,20 @@ kbd{
 .task.off{opacity:.5;}
 .task.off:hover{border-color:var(--line);box-shadow:none;cursor:not-allowed;}
 .task .off-why{
-  margin-top:6px;font-size:var(--t-micro);font-weight:650;color:var(--warn);
+  display:inline-block;margin-top:6px;padding:2px 7px;border-radius:5px;
+  background:var(--warn-bg);color:var(--warn);
+  font-size:var(--t-micro);font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+.explain{
+  padding:var(--s3);margin-top:var(--s1);
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+}
+.explain b{display:block;font-size:var(--t-small);margin-bottom:6px;}
+.explain p{margin:0 0 var(--s2);font-size:var(--t-micro);line-height:1.6;color:var(--ink-2);}
+.explain p:last-child{margin-bottom:0;}
+.explain code{
+  font-family:var(--mono);font-size:10.5px;background:var(--sunk);
+  padding:1px 4px;border-radius:3px;color:var(--ink-2);
 }
 .links{display:flex;flex-wrap:wrap;gap:6px;}
 .links a{
@@ -1023,8 +1036,23 @@ function applyCapabilities(c) {
       el.classList.add('off');
       el.disabled = true;
       el.insertAdjacentHTML('beforeend',
-        '<div class="off-why">Needs the Windows desktop app &mdash; not available on this host.</div>');
+        '<div class="off-why">Windows only &mdash; see below</div>');
     });
+    // Explain it once, properly, rather than repeating a cryptic note on each card.
+    document.querySelector('#tasks').insertAdjacentHTML('beforeend',
+      '<div class="explain">' +
+        '<b>Why two examples are greyed out</b>' +
+        '<p>The IT onboarding family drives a real <em>desktop application</em> &mdash; a Qt window, ' +
+        'controlled through Windows UI Automation, the same accessibility layer a screen reader uses. ' +
+        'That is a Windows API, and this instance runs on Linux, so those four tools are not registered ' +
+        'at all. The operator offers the surfaces it genuinely has rather than a button that can only fail.</p>' +
+        '<p>It is not a stub: it is the family that proves the architecture generalises, and it works. ' +
+        'To run it, clone the repo on Windows &mdash; <code>pip install -e ".[desktop,dev]"</code> then ' +
+        '<code>operator run "Someone new is joining..."</code>. ' +
+        'Or read a real run of it: <a href="/assets/report-onboarding.md">the report</a> and ' +
+        '<a href="/assets/verification-onboarding.md">the verification evidence</a>, with 26 screenshots ' +
+        'the operator took of itself driving that window.</p>' +
+      '</div>');
   }
 }
 loadRuns();
