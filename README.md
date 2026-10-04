@@ -77,7 +77,6 @@ so the deployed Linux host reports 20 tools across 6 surfaces rather than 24
 across 7, and the IT onboarding examples are marked unavailable. The operator
 presents the surfaces it genuinely has.
 
-**Video:** _<add link>_
 
 ### Task family 1 — accounts payable (drive → ERP → ledger)
 
@@ -659,5 +658,3 @@ substance of this submission, and wrapping someone else's loop would have hidden
 exactly the parts worth evaluating.
 
 ---
-
-Built by Nipun Tandon for the CentrAlign AI Founding Engineer submission.
